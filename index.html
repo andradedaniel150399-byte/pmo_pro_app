@@ -192,7 +192,7 @@
                         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold mb-4">Preferências da Aplicação</h3><div class="space-y-4 max-w-md"><div><label class="text-sm font-medium">Horas de Trabalho por Dia</label><p class="text-xs text-slate-500 mb-1">Define o limite para validação de superalocação.</p><input type="number" id="setting-work-hours" class="mt-1 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-sm rounded-lg block w-full p-2.5"></div></div></div>
                     </div>
                     <div id="settings-tab-team" class="settings-tab-content hidden mt-6 space-y-6">
-                        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold mb-4">Gestão da Equipe</h3><div id="professionals-list-container"></div><form id="add-professional-form" class="mt-4 flex gap-4 items-end p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg"><div class="flex-1"><label for="prof-name" class="text-sm font-medium">Nome</label><input type="text" id="prof-name" required class="mt-1 bg-white dark:bg-slate-700 border text-sm rounded-lg block w-full p-2.5"></div><div class="flex-1"><label for="prof-role" class="text-sm font-medium">Cargo</label><input type="text" id="prof-role" required class="mt-1 bg-white dark:bg-slate-700 border text-sm rounded-lg block w-full p-2.5"></div><div class="w-32"><label for="prof-cost" class="text-sm font-medium">Custo/Hora</label><input type="number" id="prof-cost" required class="mt-1 bg-white dark:bg-slate-700 border text-sm rounded-lg block w-full p-2.5"></div><button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2.5 px-4 rounded-lg">Adicionar</button></form></div>
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold mb-4">Gestão da Equipe</h3><div id="professionals-list-container"></div><form id="add-professional-form" class="mt-4 flex gap-4 items-end p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg"><div class="flex-1"><label for="prof-name" class="text-sm font-medium">Nome</label><input type="text" id="prof-name" required class="mt-1 bg-white dark:bg-slate-700 border text-sm rounded-lg block w-full p-2.5"></div><div class="flex-1"><label for="prof-role" class="text-sm font-medium">Cargo</label><input type="text" id="prof-role" required class="mt-1 bg-white dark:bg-slate-700 border text-sm rounded-lg block w-full p-2.5"></div><div class="w-32"><label for="prof-cost" class="text-sm font-medium">Custo/Hora (R$)</label><input type="number" id="prof-cost" required class="mt-1 bg-white dark:bg-slate-700 border text-sm rounded-lg block w-full p-2.5"></div><button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2.5 px-4 rounded-lg">Adicionar</button></form></div>
                     </div>
                     <div id="settings-tab-integrations" class="settings-tab-content hidden mt-6 space-y-6">
                         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold mb-4">Integração com Pipefy</h3><div class="space-y-4 max-w-xl"><div><label for="pipefy-api-key" class="text-sm font-medium">Token da API</label><input type="password" id="pipefy-api-key" class="mt-1 bg-slate-50 dark:bg-slate-700 border text-sm rounded-lg block w-full p-2.5"></div><div><label for="pipefy-pipe-id" class="text-sm font-medium">ID do Pipe</label><input type="text" id="pipefy-pipe-id" class="mt-1 bg-slate-50 dark:bg-slate-700 border text-sm rounded-lg block w-full p-2.5"></div></div></div>
@@ -207,12 +207,12 @@
 <script type="module">
     // --- FIREBASE SDK IMPORTS ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, doc, onSnapshot, addDoc, deleteDoc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, doc, onSnapshot, addDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     
     // --- STATE & CONFIG ---
     const state = {
-        appId: typeof __app_id !== 'undefined' ? __app_id : 'pmo-pro-default',
+        appId: 'pmopro-dcfca', // Default App ID
         db: null,
         auth: null,
         userId: null,
@@ -324,7 +324,7 @@
     // --- FIREBASE INTEGRATION ---
     function listenToCollection(collectionName, onUpdate, onError) {
         if (!state.userId) return;
-        const path = `artifacts/${state.appId}/users/${state.userId}/${collectionName}`;
+        const path = `artifacts/${state.appId}/public/data/${collectionName}`;
         const unsubscribe = onSnapshot(collection(state.db, path), (snapshot) => {
             const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             onUpdate(data);
@@ -336,7 +336,6 @@
     }
 
     function setupDataListeners() {
-        // Clear previous listeners to avoid duplicates on re-login
         state.unsubscribeListeners.forEach(unsub => unsub());
         state.unsubscribeListeners = [];
 
@@ -626,7 +625,7 @@
         const cost = parseFloat(document.getElementById('prof-cost').value); 
         if (!name || !role || isNaN(cost)) { showNotification('Todos os campos são obrigatórios.', 'error'); return; }
         try {
-            const path = `artifacts/${state.appId}/users/${state.userId}/professionals`;
+            const path = `artifacts/${state.appId}/public/data/professionals`;
             await addDoc(collection(state.db, path), { name, role, cost, utilization: 0 });
             e.target.reset(); 
             showNotification('Profissional adicionado com sucesso!');
@@ -640,7 +639,7 @@
         const idToRemove = e.target.dataset.id;
         showConfirmationModal(['Tem certeza que deseja remover este profissional?'], async () => {
             try {
-                const path = `artifacts/${state.appId}/users/${state.userId}/professionals`;
+                const path = `artifacts/${state.appId}/public/data/professionals`;
                 await deleteDoc(doc(state.db, path, idToRemove));
                 showNotification('Profissional removido.');
             } catch (error) {
@@ -655,7 +654,7 @@
         const newCost = parseFloat(e.target.value);
         if (isNaN(newCost)) return;
         try {
-            const path = `artifacts/${state.appId}/users/${state.userId}/professionals`;
+            const path = `artifacts/${state.appId}/public/data/professionals`;
             await updateDoc(doc(state.db, path, id), { cost: newCost });
             showNotification(`Custo atualizado.`, 'info');
         } catch (error) {
@@ -665,7 +664,7 @@
     }
     async function handleAddAllocation(projectId, professionalId, date, hours, type) {
         try {
-            const path = `artifacts/${state.appId}/users/${state.userId}/allocations`;
+            const path = `artifacts/${state.appId}/public/data/allocations`;
             await addDoc(collection(state.db, path), { professionalId, projectId, date, hours: parseFloat(hours), type });
             showNotification('Alocação salva!', 'success');
         } catch (error) {
@@ -721,7 +720,7 @@
         if (allocationsToSave.length === 0) { showNotification('Nenhuma hora para salvar.', 'info'); return; }
         showConfirmationModal([`Salvar ${allocationsToSave.length} alocações para o profissional selecionado?`], async () => {
             try {
-                const path = `artifacts/${state.appId}/users/${state.userId}/allocations`;
+                const path = `artifacts/${state.appId}/public/data/allocations`;
                 for (const alloc of allocationsToSave) await addDoc(collection(state.db, path), alloc);
                 showNotification('Alocações salvas com sucesso!', 'success');
                 document.getElementById('allocation-calendar-container').innerHTML = '';
@@ -743,7 +742,7 @@
             { id: 34571, title: 'Auditoria Anual', current_phase: { name: 'Ganho' }, fields: [ { name: 'Cliente', value: 'Empresa D' }, { name: 'Valor do Negócio (Fees)', value: '180000' }, { name: 'Diretor', value: 'Ana' }, { name: 'Tipo de Serviço', value: 'Auditoria' } ] },
         ];
         try {
-            const projectsPath = `artifacts/${state.appId}/users/${state.userId}/projects`;
+            const projectsPath = `artifacts/${state.appId}/public/data/projects`;
             const projectsCollection = collection(state.db, projectsPath);
             let addedCount = 0;
             for(const card of mockPipefyResponse) {
@@ -792,7 +791,7 @@
         const text = input.value.trim(); if (!text) return;
         const newComment = { projectId, author: state.currentUser.isAnonymous ? 'Anônimo' : (state.currentUser.displayName || 'Usuário'), timestamp: new Date().toISOString(), text };
         try {
-            const path = `artifacts/${state.appId}/users/${state.userId}/comments`;
+            const path = `artifacts/${state.appId}/public/data/comments`;
             await addDoc(collection(state.db, path), newComment);
             input.value = '';
             showNotification('Comentário adicionado!', 'success');
@@ -914,7 +913,17 @@
     }
     async function initFirebase() {
         try {
-            const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+            // ***** CORRECTION: Hardcoded Firebase Config with corrected storageBucket *****
+            const firebaseConfig = {
+                apiKey: "AIzaSyABlwa2FVFBhWI60uE8mwyxjrdWODGQtso",
+                authDomain: "pmopro-dcfca.firebaseapp.com",
+                projectId: "pmopro-dcfca",
+                storageBucket: "pmopro-dcfca.firebasestorage.app",
+                messagingSenderId: "683096468764",
+                appId: "1:683096468764:web:4d1a19bc60b0b007619ed9",
+                measurementId: "G-1GG4SXYE0L"
+            };
+
             if (!firebaseConfig.apiKey) {
                 ui.loadingOverlay.innerHTML = '<p class="text-red-400 text-lg">Configuração do Firebase não encontrada.</p>';
                 return;
@@ -922,7 +931,7 @@
             const app = initializeApp(firebaseConfig);
             state.db = getFirestore(app);
             state.auth = getAuth(app);
-            // setLogLevel('debug'); // Uncomment for development
+            
             onAuthStateChanged(state.auth, (user) => {
                 state.currentUser = user;
                 if (user) {
@@ -933,14 +942,37 @@
                     setTimeout(() => ui.loadingOverlay.style.display = 'none', 300);
                 }
             });
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(state.auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(state.auth);
-            }
+
+            await signInAnonymously(state.auth);
+
         } catch (error) {
             console.error("Firebase initialization failed:", error);
-            ui.loadingOverlay.innerHTML = `<p class="text-red-400 text-lg text-center max-w-sm">Falha na conexão com o Firebase. Verifique a configuração do projeto e as regras de segurança do Firestore.</p>`;
+            let errorMessage;
+            // --- ERRO COMUM: LOGIN ANÓNIMO DESATIVADO ---
+            // Este erro (auth/configuration-not-found) significa que o método de login "Anónimo"
+            // não está ativado no seu projeto Firebase. O código está a tentar fazer login,
+            // mas o Firebase está a bloquear porque esta opção não está permitida.
+            // A solução é ativar este método no Firebase Console.
+            if (error.code === 'auth/configuration-not-found') {
+                errorMessage = `
+                    <div class="text-center max-w-lg p-4">
+                        <h2 class="text-xl font-bold text-amber-400 mb-3">Ação Necessária no Firebase</h2>
+                        <p class="mb-4">A aplicação não consegue conectar-se porque o <strong>Login Anónimo</strong> está desativado no seu projeto Firebase.</p>
+                        <div class="text-left bg-slate-800 p-4 rounded-lg border border-slate-700">
+                            <p class="font-semibold mb-2">Como resolver:</p>
+                            <ol class="list-decimal list-inside space-y-2 text-sm">
+                                <li>Abra o seu projeto no <a href="https://console.firebase.google.com/" target="_blank" class="underline hover:text-white">Firebase Console</a>.</li>
+                                <li>No menu, vá para <strong>Construir > Authentication</strong>.</li>
+                                <li>Clique no separador <strong>"Sign-in method"</strong>.</li>
+                                <li>Na lista de provedores, clique em <strong>"Anónimo"</strong> e ative-o.</li>
+                                <li>Guarde a alteração e <strong>recarregue esta página</strong>.</li>
+                            </ol>
+                        </div>
+                    </div>`;
+            } else {
+                errorMessage = `<p class="text-red-400 text-lg text-center max-w-sm">Falha na conexão com o Firebase. Verifique a consola para mais detalhes.</p>`;
+            }
+            ui.loadingOverlay.innerHTML = errorMessage;
         }
     }
     function initApp() {

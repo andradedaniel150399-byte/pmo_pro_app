@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <!-- SUPABASE CLIENT SCRIPT -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -95,7 +97,7 @@
                 <a href="#" id="nav-forecast" class="nav-item hover:bg-slate-700/50 flex items-center p-3 rounded-lg"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg><span class="hidden lg:inline ml-4 font-medium">Forecast</span></a>
                 <a href="#" id="nav-capacity" class="nav-item hover:bg-slate-700/50 flex items-center p-3 rounded-lg"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg><span class="hidden lg:inline ml-4 font-medium">Capacidade</span></a>
                 <a href="#" id="nav-management" class="nav-item hover:bg-slate-700/50 flex items-center p-3 rounded-lg"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg><span class="hidden lg:inline ml-4 font-medium">Gestão</span></a>
-                <a href="#" id="nav-settings" class="nav-item hover:bg-slate-700/50 flex items-center p-3 rounded-lg"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span class="hidden lg:inline ml-4 font-medium">Configurações</span></a>
+                <a href="#" id="nav-settings" class="nav-item hover:bg-slate-700/50 flex items-center p-3 rounded-lg"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span class="hidden lg:inline ml-4 font-medium">Configurações</span></a>
             </nav>
         </aside>
 
@@ -113,14 +115,7 @@
                             <div id="widget-toggles" class="p-4 max-h-96 overflow-y-auto"></div>
                         </div>
                     </div>
-                    <div id="user-profile" class="hidden items-center space-x-3">
-                        <span id="user-name" class="text-sm font-medium"></span>
-                        <img id="user-photo" class="w-8 h-8 rounded-full" src="" alt="User photo">
-                    </div>
-                    <button id="login-btn" class="text-sm bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.0001 2.00002L12.0001 2.00002C17.523 2.00002 22.0001 6.47717 22.0001 12.0001C22.0001 17.523 17.523 22.0001 12.0001 22.0001C6.47717 22.0001 2.00002 17.523 2.00002 12.0001C2.00002 6.47717 6.47717 2.00002 12.0001 2.00002ZM12.0001 4.00002C7.58187 4.00002 4.00002 7.58187 4.00002 12.0001C4.00002 16.4183 7.58187 20.0001 12.0001 20.0001C16.4183 20.0001 20.0001 16.4183 20.0001 12.0001C20.0001 7.58187 16.4183 4.00002 12.0001 4.00002ZM12.0001 11.5C10.6194 11.5 9.50002 10.3807 9.50002 9.00002C9.50002 7.61931 10.6194 6.50002 12.0001 6.50002C13.3808 6.50002 14.5001 7.61931 14.5001 9.00002C14.5001 10.3807 13.3808 11.5 12.0001 11.5ZM7.7668 17.0324C8.55393 15.6588 10.151 14.5 12.0001 14.5C13.8492 14.5 15.4462 15.6588 16.2334 17.0324C15.0354 17.8329 13.5823 18.2501 12.0001 18.2501C10.4179 18.2501 8.96476 17.8329 7.7668 17.0324Z"></path></svg>
-                        Entrar
-                    </button>
+                     <div id="user-info" class="text-sm"></div>
                     <button id="theme-toggle" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
                         <svg id="theme-icon-light" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         <svg id="theme-icon-dark" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
@@ -205,19 +200,9 @@
     </div>
 
 <script type="module">
-    // --- FIREBASE SDK IMPORTS ---
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, doc, onSnapshot, addDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-    
     // --- STATE & CONFIG ---
     const state = {
-        appId: 'pmopro-dcfca', // Default App ID
-        db: null,
-        auth: null,
-        userId: null,
-        unsubscribeListeners: [],
-        currentUser: null,
+        supabase: null,
         currentView: 'dashboard',
         theme: localStorage.getItem('theme') || 'light',
         dashboardLayout: JSON.parse(localStorage.getItem('dashboardLayout')) || {
@@ -234,8 +219,9 @@
         data: {
             projects: [], professionals: [], allocations: [], comments: [],
             capacityData: { labels: ['Set', 'Out', 'Nov', 'Dez', 'Jan', 'Fev'], totalCapacity: [1280, 1344, 1280, 1216, 1344, 1216], allocated: [1100, 1050, 1150, 900, 700, 400] },
-            settings: { workHoursPerDay: 8, pipefyApiKey: '', pipefyPipeId: '', serviceAcronyms: { 'Consultoria': 'CDR', 'Tax': 'TAX', 'Auditoria': 'AUD' } }
-        }
+            settings: { workHoursPerDay: 8 }
+        },
+        subscriptions: []
     };
     
     const widgets = [
@@ -267,15 +253,8 @@
         personalizeMenu: document.getElementById('personalize-menu'),
         personalizeContainer: document.getElementById('personalize-container'),
         widgetTogglesContainer: document.getElementById('widget-toggles'),
-        pipefyApiKeyInput: document.getElementById('pipefy-api-key'),
-        pipefyPipeIdInput: document.getElementById('pipefy-pipe-id'),
-        saveSettingsBtn: document.getElementById('save-settings-btn'),
         analyzeCapacityBtn: document.getElementById('analyze-capacity-btn'),
         generateForecastBtn: document.getElementById('generate-forecast-btn'),
-        loginBtn: document.getElementById('login-btn'),
-        userProfile: document.getElementById('user-profile'),
-        userName: document.getElementById('user-name'),
-        userPhoto: document.getElementById('user-photo'),
         loadingOverlay: document.getElementById('loading-overlay'),
     };
     const titles = { dashboard: 'Dashboard', kanban: 'Kanban de Projetos', planner: 'Planejador Visual', portfolio: 'Portfólio de Projetos', profitability: 'Análise de Rentabilidade', forecast: 'Forecast de Receita', capacity: 'Análise de Capacidade', management: 'Gestão de Alocações', settings: 'Configurações' };
@@ -321,54 +300,51 @@
     }
     function hideConfirmationModal() { ui.confirmModal.classList.add('hidden'); }
     
-    // --- FIREBASE INTEGRATION ---
-    function listenToCollection(collectionName, onUpdate, onError) {
-        if (!state.userId) return;
-        const path = `artifacts/${state.appId}/public/data/${collectionName}`;
-        const unsubscribe = onSnapshot(collection(state.db, path), (snapshot) => {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            onUpdate(data);
-        }, (error) => {
-            console.error(`Error listening to ${collectionName}:`, error);
-            onError(error);
-        });
-        state.unsubscribeListeners.push(unsubscribe);
+    // --- SUPABASE INTEGRATION ---
+    async function fetchData(tableName) {
+        const { data, error } = await state.supabase.from(tableName).select('*');
+        if (error) {
+            console.error(`Error fetching ${tableName}:`, error);
+            showNotification(`Erro ao carregar ${tableName}.`, 'error');
+            return [];
+        }
+        return data;
     }
 
-    function setupDataListeners() {
-        state.unsubscribeListeners.forEach(unsub => unsub());
-        state.unsubscribeListeners = [];
+    function setupRealtimeSubscriptions() {
+        state.subscriptions.forEach(sub => sub.unsubscribe());
+        state.subscriptions = [];
 
-        listenToCollection('professionals', (data) => {
-            state.data.professionals = data;
-            renderProfessionalsList();
-            populateAllDropdowns();
-            if(state.currentView === 'planner') renderPlannerView();
-        }, () => showNotification('Erro ao carregar equipe.', 'error'));
-        
-        listenToCollection('projects', (data) => {
-            state.data.projects = data;
-            renderAllViews();
-            populateAllDropdowns();
-        }, () => showNotification('Erro ao carregar projetos.', 'error'));
-        
-        listenToCollection('allocations', (data) => {
-            state.data.allocations = data;
-             if(['planner', 'profitability'].includes(state.currentView)) {
-                 renderPlannerView();
-                 renderProfitability();
-            }
-        }, () => showNotification('Erro ao carregar alocações.', 'error'));
+        const createSubscription = (table, primaryKey, stateKey) => {
+            const sub = state.supabase.channel(`public:${table}`)
+                .on('postgres_changes', { event: '*', schema: 'public', table: table }, (payload) => {
+                    console.log(`Change received on ${table}!`, payload);
+                    const record = payload.new;
+                    const oldRecordId = payload.old?.id;
+                    const eventType = payload.eventType;
 
-        listenToCollection('comments', (data) => {
-            state.data.comments = data;
-            const modal = document.getElementById('project-modal');
-            if (!modal.classList.contains('hidden')) {
-                const projectId = modal.dataset.currentProject;
-                if(projectId) renderComments(projectId);
-            }
-        }, () => showNotification('Erro ao carregar comentários.', 'error'));
+                    if (eventType === 'INSERT') {
+                        state.data[stateKey].push(record);
+                    }
+                    if (eventType === 'UPDATE') {
+                        const index = state.data[stateKey].findIndex(item => item[primaryKey] === record[primaryKey]);
+                        if (index > -1) state.data[stateKey][index] = record;
+                    }
+                    if (eventType === 'DELETE') {
+                         state.data[stateKey] = state.data[stateKey].filter(item => item[primaryKey] !== oldRecordId);
+                    }
+                    renderAllViews(); 
+                })
+                .subscribe();
+            state.subscriptions.push(sub);
+        };
+        
+        createSubscription('professionals', 'id', 'professionals');
+        createSubscription('projects', 'id', 'projects');
+        createSubscription('allocations', 'id', 'allocations');
+        createSubscription('comments', 'id', 'comments');
     }
+
 
     // --- VIEW & THEME MANAGEMENT ---
     function switchView(viewId) {
@@ -407,10 +383,15 @@
         applyTheme();
     });
 
-    // --- RENDER FUNCTIONS (Adapted for Real-time Data) ---
+    // --- RENDER FUNCTIONS ---
     function renderAllViews() {
-        renderDashboard(); renderKanbanBoard(); renderGanttChart();
-        renderCapacityGapChart(); renderProfitability();
+        renderDashboard(); 
+        renderKanbanBoard(); 
+        renderGanttChart();
+        renderCapacityGapChart(); 
+        renderProfitability();
+        renderProfessionalsList();
+        populateAllDropdowns();
         if (state.currentView === 'planner') {
             renderDraggableProjectsList();
             renderPlannerView();
@@ -448,6 +429,7 @@
     }
     function renderGanttChart() {
         const container = document.getElementById('gantt-chart-container');
+        if(!container) return;
         const timelineStart = new Date('2025-07-01'), timelineEnd = new Date('2026-02-28');
         const totalDuration = timelineEnd - timelineStart;
         const months = ['Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez', 'Jan', 'Fev'];
@@ -463,6 +445,7 @@
     }
     function renderProfessionalsList() {
         const container = document.getElementById('professionals-list-container');
+        if(!container) return;
         let tableHTML = `<table class="w-full text-sm text-left"><thead class="text-xs uppercase bg-slate-50 dark:bg-slate-700"><tr><th class="px-6 py-3">Nome</th><th class="px-6 py-3">Cargo</th><th class="px-6 py-3">Custo/Hora (R$)</th><th class="px-6 py-3"><span class="sr-only">Ação</span></th></tr></thead><tbody>`;
         if (state.data.professionals.length === 0) {
             tableHTML += `<tr><td colspan="4" class="text-center py-10 text-slate-500">Nenhum profissional cadastrado.</td></tr>`;
@@ -585,7 +568,7 @@
         charts.capacity = new Chart(ctx, { type: 'bar', data: { labels: state.data.capacityData.labels, datasets: [ { label: 'Horas Alocadas', data: state.data.capacityData.allocated, backgroundColor: '#fb923c', }, { label: 'Horas Disponíveis', data: state.data.capacityData.totalCapacity.map((t, i) => t - state.data.capacityData.allocated[i]), backgroundColor: '#94a3b8', } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true } } } });
     }
     
-    // --- EVENT LISTENERS & HANDLERS (Firebase-aware) ---
+    // --- EVENT LISTENERS & HANDLERS ---
     function setupEventListeners() {
         ui.navItems.forEach(item => item.addEventListener('click', e => { e.preventDefault(); switchView(item.id.split('-')[1]); }));
         document.querySelectorAll('.tab-button').forEach(button => button.addEventListener('click', () => {
@@ -607,44 +590,36 @@
             }
         });
         document.getElementById('planner-month-picker').addEventListener('change', renderPlannerView);
-        document.getElementById('add-project-to-period-btn').addEventListener('click', handleAddProjectToPeriod);
-        document.getElementById('populate-period-btn').addEventListener('click', handlePopulatePeriod);
-        document.getElementById('allocation-calendar-container').addEventListener('input', handleAllocationInputChange);
-        document.getElementById('allocation-calendar-container').addEventListener('click', handleAllocationCalendarClick);
-        document.getElementById('bulk-allocation-list').addEventListener('click', e => { 
-            if (e.target.classList.contains('remove-bulk-row-btn')) e.target.closest('.bulk-alloc-row').remove(); 
-        });
-        ui.saveSettingsBtn.addEventListener('click', handlePipefySync);
     }
     
-    // --- HANDLER FUNCTIONS (Firebase-aware) ---
+    // --- HANDLER FUNCTIONS (Supabase-aware) ---
     async function handleAddProfessional(e) { 
         e.preventDefault(); 
         const name = document.getElementById('prof-name').value; 
         const role = document.getElementById('prof-role').value; 
         const cost = parseFloat(document.getElementById('prof-cost').value); 
         if (!name || !role || isNaN(cost)) { showNotification('Todos os campos são obrigatórios.', 'error'); return; }
-        try {
-            const path = `artifacts/${state.appId}/public/data/professionals`;
-            await addDoc(collection(state.db, path), { name, role, cost, utilization: 0 });
-            e.target.reset(); 
-            showNotification('Profissional adicionado com sucesso!');
-        } catch (error) {
+        
+        const { error } = await state.supabase.from('professionals').insert({ name, role, cost, utilization: 0 });
+
+        if (error) {
             console.error("Error adding professional: ", error);
             showNotification('Erro ao adicionar profissional.', 'error');
+        } else {
+            e.target.reset(); 
+            showNotification('Profissional adicionado com sucesso!');
         }
     }
     async function handleRemoveProfessional(e) { 
         if (!e.target.classList.contains('remove-prof-btn')) return; 
         const idToRemove = e.target.dataset.id;
         showConfirmationModal(['Tem certeza que deseja remover este profissional?'], async () => {
-            try {
-                const path = `artifacts/${state.appId}/public/data/professionals`;
-                await deleteDoc(doc(state.db, path, idToRemove));
-                showNotification('Profissional removido.');
-            } catch (error) {
+            const { error } = await state.supabase.from('professionals').delete().eq('id', idToRemove);
+            if (error) {
                 console.error("Error removing professional: ", error);
                 showNotification('Erro ao remover profissional.', 'error');
+            } else {
+                showNotification('Profissional removido.');
             }
         });
     }
@@ -653,118 +628,34 @@
         const id = e.target.dataset.id;
         const newCost = parseFloat(e.target.value);
         if (isNaN(newCost)) return;
-        try {
-            const path = `artifacts/${state.appId}/public/data/professionals`;
-            await updateDoc(doc(state.db, path, id), { cost: newCost });
-            showNotification(`Custo atualizado.`, 'info');
-        } catch (error) {
+        
+        const { error } = await state.supabase.from('professionals').update({ cost: newCost }).eq('id', id);
+
+        if (error) {
             console.error("Error updating cost: ", error);
             showNotification('Erro ao atualizar custo.', 'error');
+        } else {
+            showNotification(`Custo atualizado.`, 'info');
         }
     }
     async function handleAddAllocation(projectId, professionalId, date, hours, type) {
-        try {
-            const path = `artifacts/${state.appId}/public/data/allocations`;
-            await addDoc(collection(state.db, path), { professionalId, projectId, date, hours: parseFloat(hours), type });
-            showNotification('Alocação salva!', 'success');
-        } catch (error) {
+        const { error } = await state.supabase.from('allocations').insert({
+            projectId: projectId,
+            professionalId: professionalId,
+            date: date,
+            hours: parseFloat(hours),
+            type: type
+        });
+
+        if (error) {
             console.error("Error adding allocation: ", error);
             showNotification('Erro ao salvar alocação.', 'error');
+        } else {
+            showNotification('Alocação salva!', 'success');
         }
     }
-    function handleAddProjectToPeriod() { 
-        const listContainer = document.getElementById('bulk-allocation-list'); 
-        const projectOptions = state.data.projects.map(p => `<option value="${p.id}">${p.name}</option>`).join(''); 
-        const newRow = document.createElement('div'); 
-        newRow.className = 'flex items-center gap-2 bulk-alloc-row'; 
-        newRow.innerHTML = `<select class="bulk-project-select bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-sm rounded-lg block w-full p-2">${projectOptions}</select><input type="number" min="0" max="24" step="0.5" placeholder="Horas/dia" class="bulk-hours-input bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-sm rounded-lg block w-40 p-2"><button class="remove-bulk-row-btn text-red-500 hover:text-red-700 font-bold text-xl">&times;</button>`; 
-        listContainer.appendChild(newRow); 
-    }
-    function handlePopulatePeriod() { 
-        const start = document.getElementById('alloc-start-date').value, end = document.getElementById('alloc-end-date').value; 
-        if (!start || !end) { showNotification('Selecione um intervalo de datas válido.', 'error'); return; }
-        const startDate = new Date(start + 'T00:00:00'), endDate = new Date(end + 'T00:00:00'); 
-        const includeWeekends = document.getElementById('alloc-weekends').checked; 
-        const container = document.getElementById('allocation-calendar-container'); 
-        const bulkRows = document.querySelectorAll('.bulk-alloc-row'); 
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || startDate > endDate) { showNotification('Selecione um intervalo de datas válido.', 'error'); return; } 
-        if (bulkRows.length === 0) { showNotification('Adicione pelo menos um projeto.', 'error'); return; } 
-        const template = Array.from(bulkRows).map(row => ({ projectId: row.querySelector('.bulk-project-select').value, projectName: row.querySelector('.bulk-project-select').selectedOptions[0].text, hours: row.querySelector('.bulk-hours-input').value || 0 })); 
-        let calendarHTML = '<div class="space-y-4">'; 
-        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) { 
-            if (includeWeekends || (d.getDay() !== 0 && d.getDay() !== 6)) { 
-                const isoDate = d.toISOString().split('T')[0]; 
-                let allocationsHTML = template.map(a => `<div class="flex items-center gap-2" data-project-id="${a.projectId}"><input type="text" value="${a.projectName}" disabled class="bg-slate-100 dark:bg-slate-700/50 border-0 text-sm rounded-lg block w-full p-2"><input type="number" value="${a.hours}" min="0" max="24" step="0.5" class="alloc-hours-input bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-sm rounded-lg block w-40 p-2"><button class="remove-alloc-row-btn text-red-500 hover:text-red-700 font-bold text-xl">&times;</button></div>`).join(''); 
-                calendarHTML += `<div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700" data-date="${isoDate}"><p class="font-semibold">${d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' })}</p><div class="allocations-list mt-2 space-y-2">${allocationsHTML}</div></div>`; 
-            } 
-        } 
-        calendarHTML += '</div><button id="save-allocations-btn" class="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg">Salvar Alocações em Lote</button>'; 
-        container.innerHTML = calendarHTML; 
-        document.querySelectorAll('#allocation-calendar-container [data-date]').forEach(updateDayValidationStyle); 
-    }
-    function handleAllocationInputChange(e) { if (e.target.classList.contains('alloc-hours-input')) updateDayValidationStyle(e.target.closest('[data-date]')); }
-    function handleAllocationCalendarClick(e) { if (e.target.classList.contains('remove-alloc-row-btn')) { const dayCard = e.target.closest('[data-date]'); e.target.parentElement.remove(); updateDayValidationStyle(dayCard); } if (e.target.id === 'save-allocations-btn') validateAndSaveAllocations(); }
-    function updateDayValidationStyle(dayCard) { if (!dayCard) return; const totalHours = Array.from(dayCard.querySelectorAll('.alloc-hours-input')).reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0); dayCard.classList.toggle('overallocated', totalHours > state.data.settings.workHoursPerDay); }
-    async function validateAndSaveAllocations() { 
-        const professionalId = document.getElementById('alloc-professional').value;
-        const dayCards = document.querySelectorAll('#allocation-calendar-container [data-date]');
-        const allocationsToSave = [];
-        dayCards.forEach(card => {
-            const date = card.dataset.date;
-            card.querySelectorAll('.allocations-list > div').forEach(row => {
-                const projectId = row.dataset.projectId;
-                const hours = parseFloat(row.querySelector('.alloc-hours-input').value);
-                if(hours > 0) allocationsToSave.push({ professionalId, projectId, date, hours, type: 'hard' });
-            });
-        });
-        if (allocationsToSave.length === 0) { showNotification('Nenhuma hora para salvar.', 'info'); return; }
-        showConfirmationModal([`Salvar ${allocationsToSave.length} alocações para o profissional selecionado?`], async () => {
-            try {
-                const path = `artifacts/${state.appId}/public/data/allocations`;
-                for (const alloc of allocationsToSave) await addDoc(collection(state.db, path), alloc);
-                showNotification('Alocações salvas com sucesso!', 'success');
-                document.getElementById('allocation-calendar-container').innerHTML = '';
-                document.getElementById('bulk-allocation-list').innerHTML = '';
-            } catch (error) {
-                console.error("Error saving batch allocations: ", error);
-                showNotification('Erro ao salvar alocações.', 'error');
-            }
-        });
-    }
-
-    // --- AI, MODAL & INTEGRATION HANDLERS ---
-    async function handlePipefySync() {
-        showNotification('Iniciando sincronização com Pipefy...', 'info');
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
-        const mockPipefyResponse = [
-            { id: 34567, title: 'Calculadora da Reforma', current_phase: { name: 'Ativo' }, fields: [ { name: 'Cliente', value: 'Empresa A' }, { name: 'Valor do Negócio (Fees)', value: '120000' }, { name: 'Diretor', value: 'Carlos' }, { name: 'Tipo de Serviço', value: 'Consultoria' } ] },
-            { id: 34570, title: 'Novo Projeto M&A', current_phase: { name: 'Proposta' }, fields: [ { name: 'Cliente', value: 'Empresa G' }, { name: 'Valor do Negócio (Fees)', value: '350000' }, { name: 'Diretor', value: 'Mariana' }, { name: 'Tipo de Serviço', value: 'M&A' } ] },
-            { id: 34571, title: 'Auditoria Anual', current_phase: { name: 'Ganho' }, fields: [ { name: 'Cliente', value: 'Empresa D' }, { name: 'Valor do Negócio (Fees)', value: '180000' }, { name: 'Diretor', value: 'Ana' }, { name: 'Tipo de Serviço', value: 'Auditoria' } ] },
-        ];
-        try {
-            const projectsPath = `artifacts/${state.appId}/public/data/projects`;
-            const projectsCollection = collection(state.db, projectsPath);
-            let addedCount = 0;
-            for(const card of mockPipefyResponse) {
-                const existing = state.data.projects.find(p => p.pipefyId === card.id);
-                if (!existing) {
-                    const getField = (name) => card.fields.find(f => f.name.includes(name))?.value || null;
-                    const newProject = {
-                        pipefyId: card.id, name: card.title, status: card.current_phase.name, client: getField('Cliente'),
-                        fees: parseFloat(getField('Fees')) || 0, director: getField('Diretor'), serviceType: getField('Tipo de Serviço'),
-                        start: new Date().toISOString().split('T')[0], 
-                        end: new Date(new Date().setMonth(new Date().getMonth() + 2)).toISOString().split('T')[0]
-                    };
-                    await addDoc(projectsCollection, newProject);
-                    addedCount++;
-                }
-            }
-            showNotification(`${addedCount} novos projetos sincronizados do Pipefy!`, 'success');
-        } catch (error) {
-            console.error("Error syncing with Pipefy:", error);
-            showNotification('Erro ao sincronizar com o Pipefy.', 'error');
-        }
-    }
+   
+    // --- AI, MODAL & OTHER HANDLERS ---
     async function handleGenerateProjectSummary(projectId, button) {
         const project = state.data.projects.find(p => p.id === projectId); if (!project) return;
         const container = document.getElementById('gemini-summary');
@@ -789,15 +680,19 @@
     async function handleAddComment(projectId) {
         const input = document.getElementById('new-comment-input'); if (!input) return;
         const text = input.value.trim(); if (!text) return;
-        const newComment = { projectId, author: state.currentUser.isAnonymous ? 'Anônimo' : (state.currentUser.displayName || 'Usuário'), timestamp: new Date().toISOString(), text };
-        try {
-            const path = `artifacts/${state.appId}/public/data/comments`;
-            await addDoc(collection(state.db, path), newComment);
-            input.value = '';
-            showNotification('Comentário adicionado!', 'success');
-        } catch (error) {
+        
+        const { error } = await state.supabase.from('comments').insert({ 
+            projectId: projectId, 
+            author: 'Utilizador', // Supabase doesn't have built-in user display names for anon keys
+            text: text 
+        });
+
+        if (error) {
             console.error("Error adding comment: ", error);
             showNotification('Erro ao adicionar comentário.', 'error');
+        } else {
+            input.value = '';
+            showNotification('Comentário adicionado!', 'success');
         }
     }
     function renderComments(projectId) {
@@ -805,7 +700,7 @@
         const commentsForProject = state.data.comments.filter(c => c.projectId === projectId).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         if (commentsForProject.length === 0) { container.innerHTML = '<p class="text-sm text-slate-500 text-center">Nenhum comentário ainda.</p>'; return; }
         container.innerHTML = commentsForProject.map(comment => `
-            <div class="flex items-start space-x-3"><div class="flex-shrink-0 w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center font-bold text-sm">${comment.author.charAt(0)}</div>
+            <div class="flex items-start space-x-3"><div class="flex-shrink-0 w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center font-bold text-sm">${(comment.author || 'U').charAt(0)}</div>
                 <div class="flex-1"><div class="bg-slate-100 dark:bg-slate-700/50 rounded-lg p-3"><p class="font-semibold text-sm">${comment.author}</p><p class="text-sm">${comment.text}</p></div>
                     <p class="text-xs text-slate-400 mt-1">${new Date(comment.timestamp).toLocaleString('pt-BR')}</p>
                 </div></div>`).join('');
@@ -893,103 +788,65 @@
         document.getElementById('close-alloc-modal-btn').onclick = closeModal;
     }
 
-    // --- AUTHENTICATION & INITIALIZATION ---
-    function updateUserUI() {
-        if (state.currentUser) {
-            ui.loginBtn.style.display = 'none';
-            ui.userProfile.style.display = 'flex';
-            ui.userName.textContent = state.currentUser.isAnonymous ? 'Usuário Anônimo' : (state.currentUser.displayName || 'Usuário');
-            ui.userPhoto.src = state.currentUser.photoURL || `https://placehold.co/40x40/cbd5e1/ffffff?text=${state.currentUser.uid.substring(0,1).toUpperCase()}`;
-        } else {
-            ui.loginBtn.style.display = 'flex';
-            ui.userProfile.style.display = 'none';
-        }
-    }
+    // --- INITIALIZATION ---
     function populateAllDropdowns() {
         const professionalDropdowns = document.querySelectorAll('#alloc-professional, #cleanup-professional');
         const projectDropdowns = document.querySelectorAll('#cleanup-project');
         if (state.data.professionals.length > 0) professionalDropdowns.forEach(dd => { dd.innerHTML = state.data.professionals.map(p => `<option value="${p.id}">${p.name}</option>`).join(''); });
         if (state.data.projects.length > 0) projectDropdowns.forEach(dd => { dd.innerHTML = '<option value="">Todos</option>' + state.data.projects.map(p => `<option value="${p.id}">${p.name}</option>`).join(''); });
     }
-    async function initFirebase() {
+    
+    async function initSupabase() {
+        // These keys are public and safe to expose in a client-side app.
+        // Row Level Security (RLS) should be enabled on your tables in Supabase.
+        const supabaseUrl = 'https://zhwzrrujseuivxolfuwh.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpod3pycnVqc2V1aXZ4b2xmdXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3Nzk3MDAsImV4cCI6MjA3MjM1NTcwMH0.ksirOdbBuOziwVy9KIisyyoO35kLHzbJbh00Go6n424';
+        
+        if (!supabaseUrl || !supabaseKey) {
+            ui.loadingOverlay.innerHTML = `<p class="text-red-400 text-lg">Configuração do Supabase não encontrada.</p>`;
+            return;
+        }
+
         try {
-            // ***** CORRECTION: Hardcoded Firebase Config with corrected storageBucket *****
-            const firebaseConfig = {
-                apiKey: "AIzaSyABlwa2FVFBhWI60uE8mwyxjrdWODGQtso",
-                authDomain: "pmopro-dcfca.firebaseapp.com",
-                projectId: "pmopro-dcfca",
-                storageBucket: "pmopro-dcfca.firebasestorage.app",
-                messagingSenderId: "683096468764",
-                appId: "1:683096468764:web:4d1a19bc60b0b007619ed9",
-                measurementId: "G-1GG4SXYE0L"
-            };
-
-            if (!firebaseConfig.apiKey) {
-                ui.loadingOverlay.innerHTML = '<p class="text-red-400 text-lg">Configuração do Firebase não encontrada.</p>';
-                return;
-            }
-            const app = initializeApp(firebaseConfig);
-            state.db = getFirestore(app);
-            state.auth = getAuth(app);
+            state.supabase = supabase.createClient(supabaseUrl, supabaseKey);
             
-            onAuthStateChanged(state.auth, (user) => {
-                state.currentUser = user;
-                if (user) {
-                    state.userId = user.uid;
-                    updateUserUI();
-                    setupDataListeners();
-                    ui.loadingOverlay.classList.add('opacity-0');
-                    setTimeout(() => ui.loadingOverlay.style.display = 'none', 300);
-                }
-            });
+            // Fetch initial data
+            state.data.professionals = await fetchData('professionals');
+            state.data.projects = await fetchData('projects');
+            state.data.allocations = await fetchData('allocations');
+            state.data.comments = await fetchData('comments');
 
-            await signInAnonymously(state.auth);
+            // Setup realtime listeners
+            setupRealtimeSubscriptions();
+            
+            // Initial render
+            renderAllViews();
+
+            ui.loadingOverlay.classList.add('opacity-0');
+            setTimeout(() => ui.loadingOverlay.style.display = 'none', 300);
 
         } catch (error) {
-            console.error("Firebase initialization failed:", error);
-            let errorMessage;
-            // --- ERRO COMUM: LOGIN ANÓNIMO DESATIVADO ---
-            // Este erro (auth/configuration-not-found) significa que o método de login "Anónimo"
-            // não está ativado no seu projeto Firebase. O código está a tentar fazer login,
-            // mas o Firebase está a bloquear porque esta opção não está permitida.
-            // A solução é ativar este método no Firebase Console.
-            if (error.code === 'auth/configuration-not-found') {
-                errorMessage = `
-                    <div class="text-center max-w-lg p-4">
-                        <h2 class="text-xl font-bold text-amber-400 mb-3">Ação Necessária no Firebase</h2>
-                        <p class="mb-4">A aplicação não consegue conectar-se porque o <strong>Login Anónimo</strong> está desativado no seu projeto Firebase.</p>
-                        <div class="text-left bg-slate-800 p-4 rounded-lg border border-slate-700">
-                            <p class="font-semibold mb-2">Como resolver:</p>
-                            <ol class="list-decimal list-inside space-y-2 text-sm">
-                                <li>Abra o seu projeto no <a href="https://console.firebase.google.com/" target="_blank" class="underline hover:text-white">Firebase Console</a>.</li>
-                                <li>No menu, vá para <strong>Construir > Authentication</strong>.</li>
-                                <li>Clique no separador <strong>"Sign-in method"</strong>.</li>
-                                <li>Na lista de provedores, clique em <strong>"Anónimo"</strong> e ative-o.</li>
-                                <li>Guarde a alteração e <strong>recarregue esta página</strong>.</li>
-                            </ol>
-                        </div>
-                    </div>`;
-            } else {
-                errorMessage = `<p class="text-red-400 text-lg text-center max-w-sm">Falha na conexão com o Firebase. Verifique a consola para mais detalhes.</p>`;
-            }
-            ui.loadingOverlay.innerHTML = errorMessage;
+            console.error("Supabase initialization failed:", error);
+            ui.loadingOverlay.innerHTML = `<p class="text-red-400 text-lg text-center max-w-sm">Falha na conexão com o Supabase. Verifique a URL, a Chave e as regras de segurança.</p>`;
         }
     }
+
     function initApp() {
         applyTheme();
         switchView(state.currentView);
-        renderAllViews();
         setupEventListeners();
         setupDragAndDrop();
         setupPersonalizeMenu();
         ui.personalizeBtn.addEventListener('click', () => ui.personalizeMenu.classList.toggle('hidden'));
         document.addEventListener('click', e => { if (ui.personalizeContainer && !ui.personalizeContainer.contains(e.target)) ui.personalizeMenu.classList.add('hidden'); });
         ui.projectModal.addEventListener('click', e => { if (e.target === ui.projectModal) closeProjectModal(); });
+        
+        // Connect to Supabase
+        initSupabase();
     }
     
     // --- APP START ---
     initApp();
-    initFirebase();
 </script>
 
 </body>

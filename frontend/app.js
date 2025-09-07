@@ -1,159 +1,142 @@
-document.addEventListener('DOMContentLoaded', async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    window.location.replace('index.html');
-    return;
-  }
-  const emailEl = document.getElementById('user-email');
-  if (emailEl) emailEl.textContent = session.user?.email || '(sem e-mail)';
-  document.getElementById('btn-logout')?.addEventListener('click', async () => {
-    await supabase.auth.signOut();
-    window.location.replace('index.html');
-  });
-
-  await refreshKPIs();
-  await loadProjects();
-  await loadProfessionals();
-  await loadAllocations();
-
-  const syncBtn = document.getElementById('btn-sync-pipefy');
-  if (syncBtn) {
-    syncBtn.addEventListener('click', async () => {
-      syncBtn.disabled = true;
-      syncBtn.textContent = 'Sincronizando...';
-      try {
-        const resp = await fetch('/api/sync/pipefy', { method: 'POST' });
-        if (!resp.ok) throw new Error('Falha: ' + resp.status);
-        const json = await resp.json();
-        alert('Sincronizado: ' + (json?.upserts ?? 0) + ' projetos');
-        await loadProjects();
-        await refreshKPIs();
-      } catch (e) {
-        console.error(e);
-        alert('Erro: ' + e.message);
-      } finally {
-        syncBtn.disabled = false;
-        syncBtn.textContent = '🔄 Sincronizar Pipefy → Projetos';
-      }
-    });
-  }
-
-  const proForm = document.getElementById('pro-form');
-  proForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('pro-name').value.trim();
-    const email = document.getElementById('pro-email').value.trim();
-    const role = document.getElementById('pro-role').value.trim();
-    if (!name) return;
-    const r = await fetch('/api/professionals', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, role })
-    });
-    if (!r.ok) return alert('Erro ao salvar profissional');
-    document.getElementById('pro-name').value='';
-    document.getElementById('pro-email').value='';
-    document.getElementById('pro-role').value='';
-    await loadProfessionals();
-    await refreshKPIs();
-  });
-
-  const allocForm = document.getElementById('alloc-form');
-  allocForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const payload = {
-      project_id: document.getElementById('alloc-project').value,
-      professional_id: document.getElementById('alloc-professional').value,
-      hours: Number(document.getElementById('alloc-hours').value || 0),
-      start_date: document.getElementById('alloc-start').value || null,
-      end_date: document.getElementById('alloc-end').value || null
-    };
-    const r = await fetch('/api/allocations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (!r.ok) return alert('Erro ao criar alocação');
-    allocForm.reset();
-    await loadAllocations();
-    await refreshKPIs();
-  });
-});
-
+// Carrega lista de projetos (aba Projetos) e preenche selects usados nas alocações
 async function loadProjects() {
-  const tbody = document.querySelector('#tbl-projects tbody');
-  const empty = document.getElementById('projects-empty');
-  const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false }).limit(200);
-  if (error) { console.error(error); return; }
-  tbody.innerHTML = '';
-  if (!data || data.length === 0) { empty.classList.remove('hidden'); return; } else { empty.classList.add('hidden'); }
-  const projSelect = document.getElementById('alloc-project');
-  projSelect.innerHTML='';
-  for (const p of data) {
-    const tr = document.createElement('tr');
-    tr.className = 'border-b';
-    tr.innerHTML = `
-      <td class="py-2 pr-4">${escapeHtml(p.name || '')}</td>
-      <td class="py-2 pr-4">${escapeHtml(p.external_id || '')}</td>
-      <td class="py-2 pr-4">${escapeHtml(p.status || '')}</td>
-      <td class="py-2 pr-4">${escapeHtml(p.owner_email || '')}</td>
-      <td class="py-2 pr-4">${p.created_at ? new Date(p.created_at).toLocaleString() : ''}</td>`;
-    tbody.appendChild(tr);
-    const opt = document.createElement('option');
-    opt.value = p.id;
-    opt.textContent = p.name || p.external_id;
-    projSelect.appendChild(opt);
+  try {
+    const r = await fetch('/api/metrics/top-projects?limit=999'); // pega ids e nomes (reuso)
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'erro');
+
+    // Se você quiser todos, troque por uma rota que liste /api/projects (você pode criar depois)
+    // Aqui, para simplificar, uso os "top projects" só para preencher a tabela e selects.
+    const tbody = document.getElementById('projects-tbody');
+    const sel = document.getElementById('alloc-project');
+    tbody.innerHTML = '';
+    sel.innerHTML = '';
+
+    (j.items || []).forEach(p => {
+      // tabela
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="py-2 pr-4">${p.name ?? '-'}</td>
+        <td class="py-2 pr-4">${p.id ?? '-'}</td>
+        <td class="py-2 pr-4">${p.status ?? '-'}</td>
+        <td class="py-2 pr-4">${p.owner_email ?? '-'}</td>
+        <td class="py-2">${(p.created_at || '').slice(0,10)}</td>
+      `;
+      tbody.appendChild(tr);
+
+      // select
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name || p.id;
+      sel.appendChild(opt);
+    });
+  } catch (e) {
+    console.error('loadProjects', e);
   }
 }
 
 async function loadProfessionals() {
-  const list = document.getElementById('pro-list');
-  const sel = document.getElementById('alloc-professional');
-  sel.innerHTML='';
-  const r = await fetch('/api/professionals');
-  if (!r.ok) { list.innerHTML = '<li class="text-sm text-red-600">Erro ao carregar profissionais</li>'; return; }
-  const arr = await r.json();
-  list.innerHTML = '';
-  arr.forEach(p => {
-    const li = document.createElement('li');
-    li.className = 'text-sm';
-    li.textContent = `${p.name} ${p.email ? '· '+p.email : ''} ${p.role ? '· '+p.role : ''}`;
-    list.appendChild(li);
-    const opt = document.createElement('option');
-    opt.value = p.id;
-    opt.textContent = p.name + (p.role ? ' ('+p.role+')' : '');
-    sel.appendChild(opt);
-  });
-}
+  try {
+    const r = await fetch('/api/professionals');
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'erro');
 
-async function loadAllocations() {
-  const tbody = document.querySelector('#tbl-alloc tbody');
-  tbody.innerHTML='';
-  const r = await fetch('/api/allocations');
-  if (!r.ok) { tbody.innerHTML = '<tr><td colspan="4" class="py-2 text-red-600">Erro ao carregar</td></tr>'; return; }
-  const arr = await r.json();
-  for (const a of arr) {
-    const tr = document.createElement('tr');
-    tr.className='border-b';
-    tr.innerHTML = `
-      <td class="py-2 pr-4">${escapeHtml(a.project_name || '')}</td>
-      <td class="py-2 pr-4">${escapeHtml(a.professional_name || '')}</td>
-      <td class="py-2 pr-4">${a.hours ?? 0}</td>
-      <td class="py-2 pr-4">${a.start_date || ''} ${a.end_date ? ' → '+a.end_date : ''}</td>`;
-    tbody.appendChild(tr);
+    const tbody = document.getElementById('professionals-tbody');
+    const sel = document.getElementById('alloc-prof');
+    tbody.innerHTML = '';
+    sel.innerHTML = '';
+
+    (j || []).forEach(p => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="py-2 pr-4">${p.name}</td><td class="py-2 pr-4">${p.email ?? '-'}</td><td class="py-2">${p.role ?? '-'}</td>`;
+      tbody.appendChild(tr);
+
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name;
+      sel.appendChild(opt);
+    });
+  } catch (e) {
+    console.error('loadProfessionals', e);
   }
 }
 
-async function refreshKPIs() {
-  const set = (id, v) => document.getElementById(id).textContent = v;
-  const [{ count: pCount }, { count: profCount }, { count: aCount }] = await Promise.all([
-    supabase.from('projects').select('*', { count:'exact', head:true }),
-    supabase.from('professionals').select('*', { count:'exact', head:true }),
-    supabase.from('allocations').select('*', { count:'exact', head:true }),
-  ]);
-  set('kpi-projects', pCount ?? 0);
-  set('kpi-professionals', profCount ?? 0);
-  set('kpi-allocations', aCount ?? 0);
+async function addProfessional() {
+  const name = document.getElementById('prof-name').value.trim();
+  const email = document.getElementById('prof-email').value.trim();
+  const role = document.getElementById('prof-role').value.trim();
+  if (!name) return alert('Informe o nome');
+
+  try {
+    const r = await fetch('/api/professionals', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, role })
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'erro');
+    document.getElementById('prof-name').value = '';
+    document.getElementById('prof-email').value = '';
+    document.getElementById('prof-role').value = '';
+    await loadProfessionals();
+    alert('Profissional adicionado!');
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
 }
 
-function escapeHtml(s) { return (s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+async function loadAllocations() {
+  try {
+    const r = await fetch('/api/allocations');
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'erro');
+
+    const tbody = document.getElementById('allocations-tbody');
+    tbody.innerHTML = '';
+    (j || []).forEach(a => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="py-2 pr-4">${a.project_name ?? a.project_id}</td>
+        <td class="py-2 pr-4">${a.professional_name ?? a.professional_id}</td>
+        <td class="py-2 pr-4">${a.hours ?? 0}</td>
+        <td class="py-2">${(a.start_date || '')} — ${(a.end_date || '')}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (e) {
+    console.error('loadAllocations', e);
+  }
+}
+
+async function createAllocation() {
+  const project_id = document.getElementById('alloc-project').value;
+  const professional_id = document.getElementById('alloc-prof').value;
+  const hours = Number(document.getElementById('alloc-hours').value || 0);
+  const start_date = document.getElementById('alloc-start').value || null;
+  const end_date = document.getElementById('alloc-end').value || null;
+  if (!project_id || !professional_id) return alert('Selecione projeto e profissional');
+
+  try {
+    const r = await fetch('/api/allocations', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project_id, professional_id, hours, start_date, end_date })
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'erro ao criar alocação');
+    await loadAllocations();
+    alert('Alocação criada!');
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
+}
+
+// eventos
+document.getElementById('btnAddProf')?.addEventListener('click', addProfessional);
+document.getElementById('btnCreateAlloc')?.addEventListener('click', createAllocation);
+
+// carrega listas ao abrir
+loadProjects();
+loadProfessionals();
+loadAllocations();
+
+// expõe para o dashboard.js poder recarregar junto após sync
+window.loadProjects = loadProjects;

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <title>App • Área Logada</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="./supabase-client.js" defer></script>
+  <script src="./app.js" defer></script>
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900">
+  <main class="max-w-2xl mx-auto p-6">
+    <header class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold">Área Logada</h1>
+      <button id="btn-logout" class="btn">Sign Out</button>
+    </header>
+    <section class="card">
+      <h2 class="text-xl font-semibold mb-2">Olá, <span id="user-email">...</span></h2>
+      <p class="text-gray-700">Você está autenticado com Supabase. 👌</p>
+    </section>
+  </main>
+</body>
+</html>

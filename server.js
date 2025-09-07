@@ -204,6 +204,57 @@ app.get('/api/metrics/top-projects', async (req, res) => {
 });
 
 // ===== CRUD já existentes =====
+app.get('/api/projects', async (req, res) => {
+  const search = (req.query.search || '').toString().trim();
+  let query = supabase
+    .from('projects')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(500);
+  if (search) query = query.ilike('name', `%${search}%`);
+  const { data, error } = await query;
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+app.post('/api/projects', async (req, res) => {
+  const { name, external_id, status, owner_email } = req.body || {};
+  if (!name) return res.status(400).json({ error: 'name obrigatório' });
+  const { data, error } = await supabase
+    .from('projects')
+    .insert([{ name, external_id, status, owner_email }])
+    .select('*')
+    .single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+app.put('/api/projects/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  if (!id) return res.status(400).json({ error: 'id inválido' });
+  const { name, external_id, status, owner_email } = req.body || {};
+  const updates = { name, external_id, status, owner_email, updated_at: new Date().toISOString() };
+  const { data, error } = await supabase
+    .from('projects')
+    .update(updates)
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+app.delete('/api/projects/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  if (!id) return res.status(400).json({ error: 'id inválido' });
+  const { error } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ ok: true });
+});
+
 app.get('/api/professionals', async (_req, res) => {
   const { data, error } = await supabase
     .from('professionals')

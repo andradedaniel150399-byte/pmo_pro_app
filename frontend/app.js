@@ -1,40 +1,3 @@
-// Carrega lista de projetos (aba Projetos) e preenche selects usados nas alocações
-async function loadProjects() {
-  try {
-    const r = await fetch('/api/metrics/top-projects?limit=999'); // pega ids e nomes (reuso)
-    const j = await r.json();
-    if (!r.ok) throw new Error(j.error || 'erro');
-
-    // Se você quiser todos, troque por uma rota que liste /api/projects (você pode criar depois)
-    // Aqui, para simplificar, uso os "top projects" só para preencher a tabela e selects.
-    const tbody = document.getElementById('projects-tbody');
-    const sel = document.getElementById('alloc-project');
-    tbody.innerHTML = '';
-    sel.innerHTML = '';
-
-    (j.items || []).forEach(p => {
-      // tabela
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="py-2 pr-4">${p.name ?? '-'}</td>
-        <td class="py-2 pr-4">${p.id ?? '-'}</td>
-        <td class="py-2 pr-4">${p.status ?? '-'}</td>
-        <td class="py-2 pr-4">${p.owner_email ?? '-'}</td>
-        <td class="py-2">${(p.created_at || '').slice(0,10)}</td>
-      `;
-      tbody.appendChild(tr);
-
-      // select
-      const opt = document.createElement('option');
-      opt.value = p.id;
-      opt.textContent = p.name || p.id;
-      sel.appendChild(opt);
-    });
-  } catch (e) {
-    console.error('loadProjects', e);
-  }
-}
-
 async function loadProfessionals() {
   try {
     const r = await fetch('/api/professionals');
@@ -137,6 +100,3 @@ document.getElementById('btnCreateAlloc')?.addEventListener('click', createAlloc
 loadProjects();
 loadProfessionals();
 loadAllocations();
-
-// expõe para o dashboard.js poder recarregar junto após sync
-window.loadProjects = loadProjects;

@@ -25,7 +25,8 @@ const PIPEFY_OWNER_EMAIL_FIELD = process.env.PIPEFY_OWNER_EMAIL_FIELD || '';
 const app = express();
 app.use(cors());
 app.use(express.json());
-const PORT = process.env.PORT || 8080;
+// Use port provided by environment (Render) or default to 3000 for local dev
+const PORT = process.env.PORT || 3000;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -328,4 +329,8 @@ app.get('*', (req, res) => {
   });
 });
 
-app.listen(PORT, () => console.log('PMO Pro listening on http://localhost:' + PORT));
+// Bind explicitly to all IPv4 interfaces to avoid local "connection refused" issues
+// on systems where localhost resolves differently.
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`PMO Pro listening on http://localhost:${PORT}`);
+});

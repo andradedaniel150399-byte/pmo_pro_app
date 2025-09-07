@@ -1,0 +1,88 @@
+import { supabase } from './supabase-client.js';
+
+// --- Elementos da UI de Autenticação ---
+const loginForm = document.querySelector('#login-form');
+const signupForm = document.querySelector('#signup-form');
+const googleLoginBtn = document.querySelector('#google-login-btn');
+const notification = document.querySelector('#notification');
+
+// --- Funções de Notificação ---
+function showNotification(message, isError = false) {
+    notification.textContent = message;
+    notification.classList.remove('hidden', 'bg-red-500', 'bg-green-500');
+    notification.classList.add(isError ? 'bg-red-500' : 'bg-green-500');
+    setTimeout(() => {
+        notification.classList.add('hidden');
+    }, 3000);
+}
+
+// --- Lógica de Login ---
+if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = e.target.email.value;
+        const password = e.target.password.value;
+
+        const { error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+        });
+
+        if (error) {
+            showNotification(error.message, true);
+        } else {
+            // O redirecionamento é gerido pelo listener onAuthStateChange
+        }
+    });
+}
+
+// --- Lógica de Registo ---
+if (signupForm) {
+    signupForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = e.target.email.value;
+        const password = e.target.password.value;
+
+        const { error } = await supabase.auth.signUp({
+            email: email,
+            password: password,
+        });
+
+        if (error) {
+            showNotification(error.message, true);
+        } else {
+            showNotification('Registo bem-sucedido! Verifique o seu e-mail para confirmação.', false);
+            signupForm.reset();
+        }
+    });
+}
+
+// --- Lógica de Login com Google ---
+if (googleLoginBtn) {
+    googleLoginBtn.addEventListener('click', async () => {
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+        });
+        if (error) {
+            showNotification(error.message, true);
+        }
+    });
+}
+
+// --- Verifica o Estado da Autenticação ---
+// Este listener é crucial. Ele verifica se o utilizador está logado
+// e redireciona-o para a página correta.
+supabase.auth.onAuthStateChange((event, session) => {
+    const isAppPage = window.location.pathname.includes('app.html');
+
+    if (event === 'SIGNED_IN' && !isAppPage) {
+        // Se o utilizador fez login e não está na app, redireciona para a app
+        window.location.href = 'app.html';
+    }
+    
+    if (event === 'SIGNED_OUT' && isAppPage) {
+        // Se o utilizador fez logout e está na app, redireciona para o login
+        window.location.href = 'index.html';
+    }
+});
+

@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="/style.css" />
   <!-- Chart.js para gráficos -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- SortableJS para o Kanban -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-900">
   <header class="max-w-6xl mx-auto px-4 py-6 flex items-center justify-between">
@@ -24,6 +26,7 @@
       <nav class="flex gap-2">
         <button data-tab="tab-dashboard" class="tab-btn active">Dashboard</button>
         <button data-tab="tab-projects" class="tab-btn">Projetos</button>
+        <button data-tab="tab-kanban" class="tab-btn">Kanban</button>
         <button data-tab="tab-professionals" class="tab-btn">Profissionais</button>
         <button data-tab="tab-allocations" class="tab-btn">Alocações</button>
       </nav>
@@ -95,6 +98,11 @@
       </div>
     </section>
 
+    <!-- KANBAN -->
+    <section id="tab-kanban" class="tab-panel hidden">
+      <div id="kanban-board" class="kanban-board"></div>
+    </section>
+
     <!-- PROFISSIONAIS -->
     <section id="tab-professionals" class="tab-panel hidden">
       <div class="card mb-4">
@@ -152,5 +160,6 @@
 
   <script src="/app.js" defer></script>
   <script src="/dashboard.js" defer></script>
+  <script src="/kanban.js" defer></script>
 </body>
 </html>

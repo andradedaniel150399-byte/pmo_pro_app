@@ -207,6 +207,14 @@
     });
   }
 
+  function bindShortcuts() {
+    const btnCreate = $('#btnCreateProject');
+    on(btnCreate, 'click', () => {
+      const tabBtn = document.querySelector('[data-tab="tab-projects"]');
+      tabBtn && tabBtn.click();
+    });
+  }
+
   // ---------- Renderização ---------- //
   function setKpi(id, val) {
     const el = document.getElementById(id);
@@ -231,6 +239,13 @@
       setKpi('kpi-last30', j.projects_last_30d);
       setKpi('kpi-owners', j.owners);
       setKpi('kpi-hours',  j.total_hours);
+
+      const summary = $('#dashboard-summary');
+      if (summary) {
+        const total = (j.total_projects ?? 0).toLocaleString('pt-BR');
+        const hours = (j.total_hours ?? 0).toLocaleString('pt-BR');
+        summary.textContent = `${total} projetos, ${hours}h alocadas`;
+      }
 
       await ensureChartJs();
 
@@ -333,7 +348,9 @@
   }
 
   async function refreshAll() {
-    await Promise.all([loadOverview(), loadSeries(), loadTopProjects()]);
+    await loadOverview();
+    await loadSeries();
+    await loadTopProjects();
   }
 
   // ---------- Init ---------- //
@@ -342,6 +359,7 @@
     bindViewButtons();
     bindFilters();
     bindActions();
+    bindShortcuts();
     await refreshAll();
 
     // Auto-refresh leve (opcional). Ajuste o tempo se quiser.

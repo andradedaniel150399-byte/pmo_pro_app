@@ -34,6 +34,14 @@
 
     <!-- DASHBOARD -->
     <section id="tab-dashboard" class="tab-panel block">
+      <!-- Atalhos e resumo -->
+      <div id="dashboard-top" class="flex items-center justify-between mb-6">
+        <div id="dashboard-summary" class="text-sm text-slate-600"></div>
+        <div class="flex gap-2">
+          <button id="btnCreateProject" class="btn-primary">Criar Projeto</button>
+        </div>
+      </div>
+
       <!-- Sub-aba: visão -->
       <div class="flex items-center gap-2 mb-4">
         <span class="text-sm font-medium">Visão:</span>
@@ -43,40 +51,46 @@
       </div>
 
       <!-- KPIs -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="kpi-card"><div class="kpi-label">Projetos (total)</div><div id="kpi-total" class="kpi-value">-</div></div>
-        <div class="kpi-card"><div class="kpi-label">Novos (30d)</div><div id="kpi-last30" class="kpi-value">-</div></div>
-        <div class="kpi-card"><div class="kpi-label">Owners únicos</div><div id="kpi-owners" class="kpi-value">-</div></div>
-        <div class="kpi-card"><div class="kpi-label">Horas alocadas</div><div id="kpi-hours" class="kpi-value">-</div></div>
-      </div>
+      <section id="dashboard-kpis" class="mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="kpi-card"><div class="kpi-label">Projetos (total)</div><div id="kpi-total" class="kpi-value">-</div></div>
+          <div class="kpi-card"><div class="kpi-label">Novos (30d)</div><div id="kpi-last30" class="kpi-value">-</div></div>
+          <div class="kpi-card"><div class="kpi-label">Owners únicos</div><div id="kpi-owners" class="kpi-value">-</div></div>
+          <div class="kpi-card"><div class="kpi-label">Horas alocadas</div><div id="kpi-hours" class="kpi-value">-</div></div>
+        </div>
+      </section>
 
       <!-- Gráficos -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div class="card">
-          <div class="card-title">Projetos por Status</div>
-          <canvas id="chartStatus" height="120"></canvas>
+      <section id="dashboard-charts" class="mb-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="card">
+            <div class="card-title">Projetos por Status</div>
+            <canvas id="chartStatus" height="120"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title">Projetos criados (últimos 30 dias)</div>
+            <canvas id="chartSeries" height="120"></canvas>
+          </div>
         </div>
-        <div class="card">
-          <div class="card-title">Projetos criados (últimos 30 dias)</div>
-          <canvas id="chartSeries" height="120"></canvas>
-        </div>
-      </div>
+      </section>
 
       <!-- Tabela -->
-      <div class="card">
-        <div class="card-title">Top projetos por horas alocadas</div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead><tr class="text-left">
-              <th class="py-2 pr-4">Projeto</th>
-              <th class="py-2 pr-4">Status</th>
-              <th class="py-2 pr-4">Owner</th>
-              <th class="py-2">Horas</th>
-            </tr></thead>
-            <tbody id="top-projects-tbody"></tbody>
-          </table>
+      <section id="dashboard-top-projects">
+        <div class="card">
+          <div class="card-title">Top projetos por horas alocadas</div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead><tr class="text-left">
+                <th class="py-2 pr-4">Projeto</th>
+                <th class="py-2 pr-4">Status</th>
+                <th class="py-2 pr-4">Owner</th>
+                <th class="py-2">Horas</th>
+              </tr></thead>
+              <tbody id="top-projects-tbody"></tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      </section>
     </section>
 
     <!-- PROJETOS (lista simples para começar) -->

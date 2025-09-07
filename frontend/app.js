@@ -8,9 +8,11 @@ async function loadProjects() {
     // Se você quiser todos, troque por uma rota que liste /api/projects (você pode criar depois)
     // Aqui, para simplificar, uso os "top projects" só para preencher a tabela e selects.
     const tbody = document.getElementById('projects-tbody');
-    const sel = document.getElementById('alloc-project');
+    const selCreate = document.getElementById('alloc-project');
+    const selFilter = document.getElementById('filter-project');
     tbody.innerHTML = '';
-    sel.innerHTML = '';
+    selCreate.innerHTML = '';
+    if (selFilter) selFilter.innerHTML = '<option value="">Todos</option>';
 
     (j.items || []).forEach(p => {
       // tabela
@@ -24,11 +26,12 @@ async function loadProjects() {
       `;
       tbody.appendChild(tr);
 
-      // select
+      // selects
       const opt = document.createElement('option');
       opt.value = p.id;
       opt.textContent = p.name || p.id;
-      sel.appendChild(opt);
+      selCreate.appendChild(opt);
+      if (selFilter) selFilter.appendChild(opt.cloneNode(true));
     });
   } catch (e) {
     console.error('loadProjects', e);
@@ -42,9 +45,11 @@ async function loadProfessionals() {
     if (!r.ok) throw new Error(j.error || 'erro');
 
     const tbody = document.getElementById('professionals-tbody');
-    const sel = document.getElementById('alloc-prof');
+    const selCreate = document.getElementById('alloc-prof');
+    const selFilter = document.getElementById('filter-prof');
     tbody.innerHTML = '';
-    sel.innerHTML = '';
+    selCreate.innerHTML = '';
+    if (selFilter) selFilter.innerHTML = '<option value="">Todos</option>';
 
     (j || []).forEach(p => {
       const tr = document.createElement('tr');
@@ -54,7 +59,8 @@ async function loadProfessionals() {
       const opt = document.createElement('option');
       opt.value = p.id;
       opt.textContent = p.name;
-      sel.appendChild(opt);
+      selCreate.appendChild(opt);
+      if (selFilter) selFilter.appendChild(opt.cloneNode(true));
     });
   } catch (e) {
     console.error('loadProfessionals', e);
@@ -84,59 +90,12 @@ async function addProfessional() {
   }
 }
 
-async function loadAllocations() {
-  try {
-    const r = await fetch('/api/allocations');
-    const j = await r.json();
-    if (!r.ok) throw new Error(j.error || 'erro');
-
-    const tbody = document.getElementById('allocations-tbody');
-    tbody.innerHTML = '';
-    (j || []).forEach(a => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="py-2 pr-4">${a.project_name ?? a.project_id}</td>
-        <td class="py-2 pr-4">${a.professional_name ?? a.professional_id}</td>
-        <td class="py-2 pr-4">${a.hours ?? 0}</td>
-        <td class="py-2">${(a.start_date || '')} — ${(a.end_date || '')}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  } catch (e) {
-    console.error('loadAllocations', e);
-  }
-}
-
-async function createAllocation() {
-  const project_id = document.getElementById('alloc-project').value;
-  const professional_id = document.getElementById('alloc-prof').value;
-  const hours = Number(document.getElementById('alloc-hours').value || 0);
-  const start_date = document.getElementById('alloc-start').value || null;
-  const end_date = document.getElementById('alloc-end').value || null;
-  if (!project_id || !professional_id) return alert('Selecione projeto e profissional');
-
-  try {
-    const r = await fetch('/api/allocations', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ project_id, professional_id, hours, start_date, end_date })
-    });
-    const j = await r.json();
-    if (!r.ok) throw new Error(j.error || 'erro ao criar alocação');
-    await loadAllocations();
-    alert('Alocação criada!');
-  } catch (e) {
-    alert('Erro: ' + e.message);
-  }
-}
-
 // eventos
 document.getElementById('btnAddProf')?.addEventListener('click', addProfessional);
-document.getElementById('btnCreateAlloc')?.addEventListener('click', createAllocation);
 
 // carrega listas ao abrir
 loadProjects();
 loadProfessionals();
-loadAllocations();
 
 // expõe para o dashboard.js poder recarregar junto após sync
 window.loadProjects = loadProjects;

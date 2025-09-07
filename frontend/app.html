@@ -124,20 +124,29 @@
 
     <!-- ALOCAÇÕES -->
     <section id="tab-allocations" class="tab-panel hidden">
-      <div class="card">
-        <div class="card-title">Alocações</div>
-        <div class="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-3">
+      <div class="card mb-4">
+        <div class="card-title">Criar Alocação</div>
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-3">
           <select id="alloc-project" class="input"></select>
           <select id="alloc-prof" class="input"></select>
           <input id="alloc-hours" class="input" type="number" placeholder="Horas" />
           <input id="alloc-start" class="input" type="date" placeholder="Início" />
           <input id="alloc-end" class="input" type="date" placeholder="Fim" />
         </div>
-        <button id="btnCreateAlloc" class="btn-primary w-full">Criar Alocação</button>
+        <div class="mt-3">
+          <button id="btnCreateAlloc" class="btn-primary w-full">Criar Alocação</button>
+        </div>
       </div>
 
-      <div class="card mt-6">
-        <div class="card-title">Lista</div>
+      <div class="card">
+        <div class="card-title">Alocações</div>
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-3">
+          <select id="filter-project" class="input"></select>
+          <select id="filter-prof" class="input"></select>
+          <input id="filter-start" class="input" type="date" />
+          <input id="filter-end" class="input" type="date" />
+          <button id="btnFilterAlloc" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-sm">Filtrar</button>
+        </div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead><tr class="text-left">
@@ -151,6 +160,7 @@
   </main>
 
   <script src="/app.js" defer></script>
+  <script src="/allocations.js" defer></script>
   <script src="/dashboard.js" defer></script>
 </body>
 </html>

@@ -234,14 +234,26 @@ app.post('/api/professionals', async (req, res) => {
   res.json(data);
 });
 
-app.get('/api/allocations', async (_req, res) => {
-  const { data, error } = await supabase
-    .from('allocations_view')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(500);
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+app.get('/api/allocations', async (req, res) => {
+  try {
+    let query = supabase
+      .from('allocations_view')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(500);
+
+    const { project_id, professional_id, start_date, end_date } = req.query || {};
+    if (project_id) query = query.eq('project_id', project_id);
+    if (professional_id) query = query.eq('professional_id', professional_id);
+    if (start_date) query = query.gte('start_date', start_date);
+    if (end_date) query = query.lte('end_date', end_date);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.post('/api/allocations', async (req, res) => {

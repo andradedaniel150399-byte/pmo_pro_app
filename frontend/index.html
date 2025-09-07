@@ -2,49 +2,59 @@
 <html lang="pt-br">
 <head>
   <meta charset="utf-8" />
-  <title>PMO Pro - Login</title>
+  <title>PMO Pro</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./landing.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/env.js" defer></script>
   <script src="./supabase-client.js" defer></script>
   <script src="./auth.js" defer></script>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center">
-  <main class="w-full max-w-md bg-white rounded-2xl shadow-md p-8">
-    <h1 class="text-3xl font-bold text-center mb-2">PMO Pro 🚀</h1>
-    <p class="text-center text-gray-600 mb-6">Gerencie seus projetos com facilidade.</p>
-
-    <section class="space-y-4 mb-8">
-      <h2 class="text-lg font-semibold">Sign Up</h2>
-      <form id="signup-form" class="space-y-3">
-        <input id="signup-email" type="email" required placeholder="Seu e-mail" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        <input id="signup-password" type="password" required placeholder="Senha" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        <button class="w-full px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors" type="submit">Criar conta</button>
-      </form>
-      <button id="signup-google" class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
-        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5" />
-        <span>Criar conta com Google</span>
-      </button>
-      <p id="signup-msg" class="text-sm text-center text-red-500"></p>
+<body class="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 flex flex-col">
+  <main class="flex-grow flex flex-col">
+    <section class="hero">
+      <h1 class="hero-title">PMO Pro 🚀</h1>
+      <p class="hero-subtitle">Gerencie seus projetos com facilidade.</p>
     </section>
 
-    <div class="border-t mb-8"></div>
+    <section class="max-w-4xl mx-auto px-4 grid gap-8 md:grid-cols-3">
+      <div class="feature-card">
+        <img src="https://www.svgrepo.com/show/448261/dashboard.svg" alt="Dashboards" class="w-12 h-12 mx-auto mb-4" />
+        <h3 class="font-semibold mb-2">Dashboards</h3>
+        <p class="text-sm text-gray-600">Acompanhe o progresso em tempo real.</p>
+      </div>
+      <div class="feature-card">
+        <img src="https://www.svgrepo.com/show/384519/tasks.svg" alt="Tarefas" class="w-12 h-12 mx-auto mb-4" />
+        <h3 class="font-semibold mb-2">Tarefas</h3>
+        <p class="text-sm text-gray-600">Organize tarefas e prazos facilmente.</p>
+      </div>
+      <div class="feature-card">
+        <img src="https://www.svgrepo.com/show/487127/collaboration.svg" alt="Colaboração" class="w-12 h-12 mx-auto mb-4" />
+        <h3 class="font-semibold mb-2">Colaboração</h3>
+        <p class="text-sm text-gray-600">Trabalhe com sua equipe de forma integrada.</p>
+      </div>
+    </section>
 
-    <section class="space-y-4">
-      <h2 class="text-lg font-semibold">Sign In</h2>
-      <form id="signin-form" class="space-y-3">
-        <input id="signin-email" type="email" required placeholder="Seu e-mail" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        <input id="signin-password" type="password" required placeholder="Senha" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        <button class="w-full px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors" type="submit">Entrar</button>
+    <section class="max-w-md mx-auto w-full px-4 py-12">
+      <div class="flex justify-center mb-6 gap-2">
+        <button id="tab-signin" class="tab-btn active">Entrar</button>
+        <button id="tab-signup" class="tab-btn">Cadastrar</button>
+      </div>
+      <form id="auth-form" class="space-y-3">
+        <input id="auth-email" type="email" required placeholder="Seu e-mail" class="input" />
+        <input id="auth-password" type="password" required placeholder="Senha" class="input" />
+        <button id="auth-submit" type="submit" class="btn-primary w-full">Entrar</button>
       </form>
-      <button id="signin-google" class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
+      <button id="auth-google" class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-slate-200 mt-3 hover:bg-slate-50">
         <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5" />
-        <span>Entrar com Google</span>
+        <span>Continuar com Google</span>
       </button>
-      <p id="signin-msg" class="text-sm text-center text-red-500"></p>
+      <p id="auth-msg" class="text-sm text-center text-red-500 mt-2"></p>
     </section>
   </main>
+  <footer class="text-center py-4 text-xs text-gray-500">© 2024 PMO Pro</footer>
 </body>
 </html>
+

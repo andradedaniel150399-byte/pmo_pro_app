@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="utf-8" />
-  <title>Login • PMO Pro</title>
+  <title>PMO Pro - Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="./style.css" />
@@ -10,30 +10,40 @@
   <script src="./supabase-client.js" defer></script>
   <script src="./auth.js" defer></script>
 </head>
-<body class="min-h-screen bg-gray-50 text-gray-900">
-  <main class="max-w-lg mx-auto p-6">
-    <h1 class="text-2xl font-bold mb-4 text-center">Bem-vindo ao PMO Pro 🚀</h1>
-    <p class="text-sm text-gray-600 mb-8 text-center">Faça seu cadastro (Sign Up) e depois login (Sign In).</p>
-    <div class="grid gap-8">
-      <section class="card">
-        <h2 class="text-xl font-semibold mb-3">Sign Up</h2>
-        <form id="signup-form" class="grid gap-3">
-          <input id="signup-email" type="email" required placeholder="Seu e-mail" class="input" />
-          <input id="signup-password" type="password" required placeholder="Senha" class="input" />
-          <button class="btn w-full" type="submit">Criar conta</button>
-        </form>
-        <p id="signup-msg" class="msg"></p>
-      </section>
-      <section class="card">
-        <h2 class="text-xl font-semibold mb-3">Sign In</h2>
-        <form id="signin-form" class="grid gap-3">
-          <input id="signin-email" type="email" required placeholder="Seu e-mail" class="input" />
-          <input id="signin-password" type="password" required placeholder="Senha" class="input" />
-          <button class="btn w-full" type="submit">Entrar</button>
-        </form>
-        <p id="signin-msg" class="msg"></p>
-      </section>
-    </div>
+<body class="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center">
+  <main class="w-full max-w-md bg-white rounded-2xl shadow-md p-8">
+    <h1 class="text-3xl font-bold text-center mb-2">PMO Pro 🚀</h1>
+    <p class="text-center text-gray-600 mb-6">Gerencie seus projetos com facilidade.</p>
+
+    <section class="space-y-4 mb-8">
+      <h2 class="text-lg font-semibold">Sign Up</h2>
+      <form id="signup-form" class="space-y-3">
+        <input id="signup-email" type="email" required placeholder="Seu e-mail" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        <input id="signup-password" type="password" required placeholder="Senha" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        <button class="w-full px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors" type="submit">Criar conta</button>
+      </form>
+      <button id="signup-google" class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
+        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5" />
+        <span>Criar conta com Google</span>
+      </button>
+      <p id="signup-msg" class="text-sm text-center text-red-500"></p>
+    </section>
+
+    <div class="border-t mb-8"></div>
+
+    <section class="space-y-4">
+      <h2 class="text-lg font-semibold">Sign In</h2>
+      <form id="signin-form" class="space-y-3">
+        <input id="signin-email" type="email" required placeholder="Seu e-mail" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        <input id="signin-password" type="password" required placeholder="Senha" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        <button class="w-full px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors" type="submit">Entrar</button>
+      </form>
+      <button id="signin-google" class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
+        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5" />
+        <span>Entrar com Google</span>
+      </button>
+      <p id="signin-msg" class="text-sm text-center text-red-500"></p>
+    </section>
   </main>
 </body>
 </html>

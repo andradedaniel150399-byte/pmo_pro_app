@@ -1,8 +1,3 @@
-.tab-btn {
-  @apply px-4 py-2 rounded-xl text-sm bg-slate-200 hover:bg-slate-300;
-}
-.tab-btn.active { @apply bg-indigo-600 text-white; }
-
 .view-btn {
   @apply px-3 py-1 rounded-full text-xs bg-slate-200 hover:bg-slate-300;
 }
@@ -20,3 +15,9 @@
 
 .tab-panel.hidden { display: none; }
 .tab-panel.block { display: block; }
+
+.app-container { @apply flex min-h-screen; }
+.sidebar { @apply w-56 bg-white border-r border-slate-200 p-4; }
+.sidebar-link { @apply block px-3 py-2 rounded-lg text-sm text-slate-700 hover:bg-slate-100; }
+.sidebar-link.active { @apply bg-indigo-600 text-white; }
+.main-content { @apply flex-1; }

@@ -43,46 +43,28 @@ async function loadProfessionals() {
 
     const tbody = document.getElementById('professionals-tbody');
     const sel = document.getElementById('alloc-prof');
-    tbody.innerHTML = '';
-    sel.innerHTML = '';
+    if (!tbody && !sel) return;
+    if (tbody) tbody.innerHTML = '';
+    if (sel) sel.innerHTML = '';
 
     (j || []).forEach(p => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td class="py-2 pr-4">${p.name}</td><td class="py-2 pr-4">${p.email ?? '-'}</td><td class="py-2">${p.role ?? '-'}</td>`;
-      tbody.appendChild(tr);
-
-      const opt = document.createElement('option');
-      opt.value = p.id;
-      opt.textContent = p.name;
-      sel.appendChild(opt);
+      if (tbody) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="py-2 pr-4">${p.name}</td><td class="py-2 pr-4">${p.email ?? '-'}</td><td class="py-2">${p.role ?? '-'}</td>`;
+        tbody.appendChild(tr);
+      }
+      if (sel) {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        sel.appendChild(opt);
+      }
     });
   } catch (e) {
     console.error('loadProfessionals', e);
   }
 }
 
-async function addProfessional() {
-  const name = document.getElementById('prof-name').value.trim();
-  const email = document.getElementById('prof-email').value.trim();
-  const role = document.getElementById('prof-role').value.trim();
-  if (!name) return alert('Informe o nome');
-
-  try {
-    const r = await fetch('/api/professionals', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, role })
-    });
-    const j = await r.json();
-    if (!r.ok) throw new Error(j.error || 'erro');
-    document.getElementById('prof-name').value = '';
-    document.getElementById('prof-email').value = '';
-    document.getElementById('prof-role').value = '';
-    await loadProfessionals();
-    alert('Profissional adicionado!');
-  } catch (e) {
-    alert('Erro: ' + e.message);
-  }
-}
 
 async function loadAllocations() {
   try {
@@ -129,14 +111,29 @@ async function createAllocation() {
   }
 }
 
+// controla navegação lateral
+function initSidebar() {
+  document.querySelectorAll('.sidebar-link').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const target = link.getAttribute('data-section');
+      document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+      const panel = document.getElementById(target);
+      panel && panel.classList.remove('hidden');
+    });
+  });
+}
+
 // eventos
-document.getElementById('btnAddProf')?.addEventListener('click', addProfessional);
 document.getElementById('btnCreateAlloc')?.addEventListener('click', createAllocation);
 
 // carrega listas ao abrir
 loadProjects();
 loadProfessionals();
 loadAllocations();
+initSidebar();
 
 // expõe para o dashboard.js poder recarregar junto após sync
 window.loadProjects = loadProjects;

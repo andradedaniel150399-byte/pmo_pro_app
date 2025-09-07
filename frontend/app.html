@@ -10,27 +10,29 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-900">
-  <header class="max-w-6xl mx-auto px-4 py-6 flex items-center justify-between">
-    <h1 class="text-2xl font-bold">PMO Pro</h1>
-    <div class="flex items-center gap-3">
-      <button id="btnSync" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm">🔄 Sincronizar Pipefy → Projetos</button>
-      <button id="btnLogout" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-sm">Sair</button>
-    </div>
-  </header>
-
-  <main class="max-w-6xl mx-auto px-4 pb-24">
-    <!-- Tabs principais -->
-    <div class="mb-6">
-      <nav class="flex gap-2">
-        <button data-tab="tab-dashboard" class="tab-btn active">Dashboard</button>
-        <button data-tab="tab-projects" class="tab-btn">Projetos</button>
-        <button data-tab="tab-professionals" class="tab-btn">Profissionais</button>
-        <button data-tab="tab-allocations" class="tab-btn">Alocações</button>
+  <div class="app-container">
+    <aside class="sidebar">
+      <nav class="flex flex-col gap-2">
+        <a href="#" data-section="tab-dashboard" class="sidebar-link active">Dashboard</a>
+        <a href="#" data-section="tab-projects" class="sidebar-link">Projetos</a>
+        <a href="#" data-section="tab-kanban" class="sidebar-link">Kanban</a>
+        <a href="#" data-section="tab-allocations" class="sidebar-link">Alocação</a>
+        <a href="#" data-section="tab-settings" class="sidebar-link">Configurações</a>
       </nav>
-    </div>
+    </aside>
+    <div class="main-content flex-1">
+      <header class="max-w-6xl mx-auto px-4 py-6 flex items-center justify-between">
+        <h1 class="text-2xl font-bold">PMO Pro</h1>
+        <div class="flex items-center gap-3">
+          <button id="btnSync" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm">🔄 Sincronizar Pipefy → Projetos</button>
+          <button id="btnLogout" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-sm">Sair</button>
+        </div>
+      </header>
 
-    <!-- DASHBOARD -->
-    <section id="tab-dashboard" class="tab-panel block">
+      <main class="max-w-6xl mx-auto px-4 pb-24">
+
+        <!-- DASHBOARD -->
+        <section id="tab-dashboard" class="tab-panel block">
       <!-- Sub-aba: visão -->
       <div class="flex items-center gap-2 mb-4">
         <span class="text-sm font-medium">Visão:</span>
@@ -95,30 +97,11 @@
       </div>
     </section>
 
-    <!-- PROFISSIONAIS -->
-    <section id="tab-professionals" class="tab-panel hidden">
-      <div class="card mb-4">
-        <div class="card-title">Adicionar Profissional</div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <input id="prof-name" class="input" placeholder="Nome" />
-          <input id="prof-email" class="input" placeholder="Email" />
-          <input id="prof-role" class="input" placeholder="Função/Role" />
-        </div>
-        <div class="mt-3">
-          <button id="btnAddProf" class="btn-primary">Adicionar Profissional</button>
-        </div>
-      </div>
-
+    <!-- KANBAN -->
+    <section id="tab-kanban" class="tab-panel hidden">
       <div class="card">
-        <div class="card-title">Profissionais</div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead><tr class="text-left">
-              <th class="py-2 pr-4">Nome</th><th class="py-2 pr-4">Email</th><th class="py-2">Função</th>
-            </tr></thead>
-            <tbody id="professionals-tbody"></tbody>
-          </table>
-        </div>
+        <div class="card-title">Kanban</div>
+        <p>Em construção...</p>
       </div>
     </section>
 
@@ -148,7 +131,18 @@
         </div>
       </div>
     </section>
-  </main>
+
+    <!-- CONFIGURAÇÕES -->
+    <section id="tab-settings" class="tab-panel hidden">
+      <div class="card">
+        <div class="card-title">Configurações</div>
+        <p>Em breve...</p>
+      </div>
+    </section>
+
+      </main>
+    </div>
+  </div>
 
   <script src="/app.js" defer></script>
   <script src="/dashboard.js" defer></script>

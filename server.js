@@ -5,6 +5,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
+import fs from 'fs/promises';
 
 // ===== Logs de segurança =====
 process.on('unhandledRejection', (e) => console.error('[unhandledRejection]', e));
@@ -34,12 +35,62 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 const FRONT_DIR  = path.join(__dirname, 'frontend');
+const SETTINGS_PATH = path.join(__dirname, 'settings.json');
+
+const defaultSettings = {
+  profile: {},
+  integrations: {},
+  preferences: {
+    enabledCards: {
+      dashboard: true,
+      projects: true,
+      professionals: true,
+      allocations: true
+    },
+    customFields: [],
+    accessList: []
+  }
+};
+
+async function readSettings() {
+  try {
+    const raw = await fs.readFile(SETTINGS_PATH, 'utf8');
+    const json = JSON.parse(raw);
+    return { ...defaultSettings, ...json };
+  } catch {
+    return defaultSettings;
+  }
+}
+
+async function writeSettings(data) {
+  await fs.writeFile(SETTINGS_PATH, JSON.stringify(data, null, 2));
+}
 
 app.use(express.static(FRONT_DIR));
 app.get('/', (_req, res) => res.sendFile(path.join(FRONT_DIR, 'index.html')));
 
 // Health
 app.get('/api', (_req, res) => res.json({ ok: true, service: 'PMO Pro API' }));
+
+// ===== Settings =====
+app.get('/api/settings', async (_req, res) => {
+  try {
+    const s = await readSettings();
+    res.json(s);
+  } catch (e) {
+    res.status(500).json({ error: String(e.message || e) });
+  }
+});
+
+app.post('/api/settings', async (req, res) => {
+  try {
+    const body = req.body || {};
+    await writeSettings(body);
+    res.json(body);
+  } catch (e) {
+    res.status(500).json({ error: String(e.message || e) });
+  }
+});
 
 // ===== Pipefy: inspecionar campos =====
 app.get('/api/inspect/fields', async (req, res) => {

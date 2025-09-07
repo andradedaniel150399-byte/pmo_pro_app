@@ -26,6 +26,7 @@
         <button data-tab="tab-projects" class="tab-btn">Projetos</button>
         <button data-tab="tab-professionals" class="tab-btn">Profissionais</button>
         <button data-tab="tab-allocations" class="tab-btn">Alocações</button>
+        <button data-tab="tab-settings" class="tab-btn">Configurações</button>
       </nav>
     </div>
 
@@ -148,9 +149,70 @@
         </div>
       </div>
     </section>
+
+    <!-- SETTINGS -->
+    <section id="tab-settings" class="tab-panel hidden">
+      <div class="mb-4">
+        <nav class="flex gap-2">
+          <button data-subtab="settings-profile" class="subtab-btn tab-btn active">Perfil</button>
+          <button data-subtab="settings-integrations" class="subtab-btn tab-btn">Integrações</button>
+          <button data-subtab="settings-preferences" class="subtab-btn tab-btn">Preferências</button>
+        </nav>
+      </div>
+
+      <div id="settings-profile" class="subtab-panel">
+        <div class="card">
+          <div class="card-title">Perfil</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input id="profile-name" class="input" placeholder="Nome" />
+            <input id="profile-email" class="input" placeholder="Email" />
+          </div>
+          <div class="mt-3">
+            <button id="btnSaveProfile" class="btn-primary">Salvar</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="settings-integrations" class="subtab-panel hidden">
+        <div class="card">
+          <div class="card-title">Integrações</div>
+          <div class="grid grid-cols-1 gap-3">
+            <input id="int-pipefy-token" class="input" placeholder="Pipefy Token" />
+            <input id="int-supabase-url" class="input" placeholder="Supabase URL" />
+            <input id="int-supabase-key" class="input" placeholder="Supabase Key" />
+          </div>
+          <div class="mt-3">
+            <button id="btnSaveIntegrations" class="btn-primary">Salvar</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="settings-preferences" class="subtab-panel hidden">
+        <div class="card">
+          <div class="card-title">Preferências</div>
+          <div class="mb-4">
+            <div class="font-medium mb-2">Cards</div>
+            <label class="block"><input type="checkbox" id="pref-card-dashboard" class="mr-2" />Dashboard</label>
+            <label class="block"><input type="checkbox" id="pref-card-projects" class="mr-2" />Projetos</label>
+            <label class="block"><input type="checkbox" id="pref-card-professionals" class="mr-2" />Profissionais</label>
+            <label class="block"><input type="checkbox" id="pref-card-allocations" class="mr-2" />Alocações</label>
+          </div>
+          <div class="mb-4">
+            <div class="font-medium mb-2">Campos de formulário</div>
+            <input id="pref-form-fields" class="input" placeholder="Ex: campo1, campo2" />
+          </div>
+          <div class="mb-4">
+            <div class="font-medium mb-2">Acessos permitidos</div>
+            <textarea id="pref-access-list" class="input" rows="3" placeholder="emails separados por vírgula"></textarea>
+          </div>
+          <button id="btnSavePreferences" class="btn-primary">Salvar</button>
+        </div>
+      </div>
+    </section>
   </main>
 
   <script src="/app.js" defer></script>
   <script src="/dashboard.js" defer></script>
+  <script src="/settings.js" defer></script>
 </body>
 </html>

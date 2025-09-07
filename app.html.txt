@@ -7,16 +7,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
 
-    <div id="loading-overlay" class="fixed inset-0 bg-slate-900 bg-opacity-80 flex-col text-white flex items-center justify-center transition-opacity duration-300">
+    <div id="loading-overlay" class="fixed inset-0 bg-slate-900 bg-opacity-80 flex-col text-white flex items-center justify-center transition-opacity duration-300 z-2000">
         <div class="spinner !w-12 !h-12 !border-4"></div>
-        <p class="mt-4 text-lg font-semibold">A Carregar Aplicação...</p>
+        <p class="mt-4 text-lg font-semibold">A carregar aplicação...</p>
     </div>
 
     <div id="notification-container"></div>
@@ -46,13 +46,14 @@
                 <a href="#" id="nav-dashboard" class="nav-item bg-slate-700 text-white flex items-center p-3 rounded-lg"><svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg><span class="hidden lg:inline ml-4 font-medium">Dashboard</span></a>
                 <a href="#" id="nav-kanban" class="nav-item hover:bg-slate-700/50 flex items-center p-3 rounded-lg"><svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1z"/></svg><span class="hidden lg:inline ml-4 font-medium">Kanban</span></a>
                 <a href="#" id="nav-planner" class="nav-item hover:bg-slate-700/50 flex items-center p-3 rounded-lg"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg><span class="hidden lg:inline ml-4 font-medium">Planejador</span></a>
-                <a href="#" id="nav-portfolio" class="nav-item hover:bg-slate-700/50 flex items-center p-3 rounded-lg"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg><span class="hidden lg:inline ml-4 font-medium">Portfólio</span></a>
-                <a href="#" id="nav-profitability" class="nav-item hover:bg-slate-700/50 flex items-center p-3 rounded-lg"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg><span class="hidden lg:inline ml-4 font-medium">Rentabilidade</span></a>
-                <a href="#" id="nav-forecast" class="nav-item hover:bg-slate-700/50 flex items-center p-3 rounded-lg"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg><span class="hidden lg:inline ml-4 font-medium">Forecast</span></a>
-                <a href="#" id="nav-capacity" class="nav-item hover:bg-slate-700/50 flex items-center p-3 rounded-lg"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg><span class="hidden lg:inline ml-4 font-medium">Capacidade</span></a>
-                <a href="#" id="nav-management" class="nav-item hover:bg-slate-700/50 flex items-center p-3 rounded-lg"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg><span class="hidden lg:inline ml-4 font-medium">Gestão</span></a>
                 <a href="#" id="nav-settings" class="nav-item hover:bg-slate-700/50 flex items-center p-3 rounded-lg"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span class="hidden lg:inline ml-4 font-medium">Configurações</span></a>
             </nav>
+            <div class="mt-auto p-4">
+                 <button id="logout-btn" class="w-full flex items-center justify-center lg:justify-start text-left p-3 rounded-lg hover:bg-slate-700/50">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    <span class="hidden lg:inline ml-4 font-medium">Sair</span>
+                </button>
+            </div>
         </aside>
 
         <!-- Main Content -->
@@ -69,8 +70,7 @@
                             <div id="widget-toggles" class="p-4 max-h-96 overflow-y-auto"></div>
                         </div>
                     </div>
-                    <div id="user-info" class="text-sm font-medium text-slate-600 dark:text-slate-300"></div>
-                    <button id="logout-btn" class="text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium">Sair</button>
+                     <div id="user-info" class="text-sm font-medium text-slate-700 dark:text-slate-300"></div>
                     <button id="theme-toggle" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
                         <svg id="theme-icon-light" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         <svg id="theme-icon-dark" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
@@ -86,14 +86,13 @@
                         <div class="lg:w-80">
                             <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm h-full">
                                 <h3 class="font-semibold mb-3">Projetos para Alocar</h3>
-                                <div id="planner-projects-list" class="space-y-2 max-h-[70vh] overflow-y-auto pr-2">
-                                </div>
+                                <div id="planner-projects-list" class="space-y-2 max-h-[70vh] overflow-y-auto pr-2"></div>
                             </div>
                         </div>
                         <div class="flex-1">
                              <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
                                 <div class="flex items-center justify-between mb-4">
-                                    <h3 class="font-semibold">Planejador Visual de Capacidade</h3>
+                                    <h3 class="font-semibold">Planejador Visual</h3>
                                     <input type="month" id="planner-month-picker" class="bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-sm rounded-lg p-2">
                                 </div>
                                 <div id="planner-grid-container" class="overflow-x-auto"></div>
@@ -101,31 +100,27 @@
                         </div>
                     </div>
                 </div>
-                <div id="view-portfolio" class="view-content hidden space-y-6"><div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm overflow-x-auto"><div id="gantt-chart-container" class="min-w-[1000px]"></div></div></div>
-                <div id="view-profitability" class="view-content hidden space-y-6">
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold mb-4">Análise de Rentabilidade de Projetos</h3><div class="chart-container"><canvas id="profitabilityChart"></canvas></div></div>
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold mb-4">Detalhes Financeiros</h3><div id="profitability-table-container" class="relative overflow-x-auto"></div></div>
-                </div>
-                <div id="view-forecast" class="view-content hidden space-y-6">
-                     <!-- Conteúdo do Forecast aqui -->
-                </div>
-                <div id="view-capacity" class="view-content hidden space-y-6">
-                    <!-- Conteúdo da Capacidade aqui -->
-                </div>
-                <div id="view-management" class="view-content hidden space-y-6">
-                    <!-- Conteúdo da Gestão aqui -->
-                </div>
                 <div id="view-settings" class="view-content hidden space-y-6">
-                    <div class="border-b border-slate-200 dark:border-slate-700"><nav class="-mb-px flex space-x-6" id="settings-tabs"><button class="settings-tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="team">Equipe e Custos</button></nav></div>
-                    <div id="settings-tab-team" class="settings-tab-content mt-6 space-y-6">
-                        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold mb-4">Gestão da Equipe</h3><div id="professionals-list-container"></div><form id="add-professional-form" class="mt-4 flex gap-4 items-end p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg"><div class="flex-1"><label for="prof-name" class="text-sm font-medium">Nome</label><input type="text" id="prof-name" required class="mt-1 bg-white dark:bg-slate-700 border text-sm rounded-lg block w-full p-2.5"></div><div class="flex-1"><label for="prof-role" class="text-sm font-medium">Cargo</label><input type="text" id="prof-role" required class="mt-1 bg-white dark:bg-slate-700 border text-sm rounded-lg block w-full p-2.5"></div><div class="w-32"><label for="prof-cost" class="text-sm font-medium">Custo/Hora (R$)</label><input type="number" id="prof-cost" required class="mt-1 bg-white dark:bg-slate-700 border text-sm rounded-lg block w-full p-2.5"></div><button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2.5 px-4 rounded-lg">Adicionar</button></form></div>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
+                        <h3 class="font-semibold mb-4">Gestão da Equipe</h3>
+                        <div id="professionals-list-container"></div>
+                        <form id="add-professional-form" class="mt-4 flex gap-4 items-end p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                            <div class="flex-1"><label for="prof-name" class="text-sm font-medium">Nome</label><input type="text" id="prof-name" required class="mt-1 bg-white dark:bg-slate-700 border text-sm rounded-lg block w-full p-2.5"></div>
+                            <div class="flex-1"><label for="prof-role" class="text-sm font-medium">Cargo</label><input type="text" id="prof-role" required class="mt-1 bg-white dark:bg-slate-700 border text-sm rounded-lg block w-full p-2.5"></div>
+                            <div class="w-32"><label for="prof-cost" class="text-sm font-medium">Custo/Hora</label><input type="number" id="prof-cost" required class="mt-1 bg-white dark:bg-slate-700 border text-sm rounded-lg block w-full p-2.5"></div>
+                            <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2.5 px-4 rounded-lg">Adicionar</button>
+                        </form>
                     </div>
                 </div>
             </div>
         </main>
     </div>
-    
-    <script type="module" src="app.js"></script>
+
+    <!-- Client-side Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="app.js"></script>
+
 </body>
 </html>
 

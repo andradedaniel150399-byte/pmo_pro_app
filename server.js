@@ -1,4 +1,4 @@
-// server.js — PMO Pro (robusto no Render)
+// server.js — PMO Pro (robusto no Render, compatível com Pipefy atual)
 
 import express from 'express';
 import cors from 'cors';
@@ -10,15 +10,16 @@ import { createClient } from '@supabase/supabase-js';
 process.on('unhandledRejection', (e) => console.error('[unhandledRejection]', e));
 process.on('uncaughtException',  (e) => console.error('[uncaughtException]', e));
 
-// ======= CONFIG FIXA (vc pediu tudo embutido) =======
+// ======= CONFIG FIXA (você pediu tudo embutido) =======
 const SUPABASE_URL = 'https://zhwzrrujseuivxolfuwh.supabase.co';
-const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpod3pycnVqc2V1aXZ4b2xmdXdoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Njc3OTcwMCwiZXhwIjoyMDcyMzU1NzAwfQ.xwCQlLyx9_vrqxIkE6HWzKWPbmtJyrAceqR8pWN6OZA';
+const SUPABASE_SERVICE_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpod3pycnVqc2V1aXZ4b2xmdXdoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Njc3OTcwMCwiZXhwIjoyMDcyMzU1NzAwfQ.xwCQlLyx9_vrqxIkE6HWzKWPbmtJyrAceqR8pWN6OZA';
 
 const PIPEFY_TOKEN =
   'eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJQaXBlZnkiLCJpYXQiOjE3NTcyNjQzMTEsImp0aSI6IjIwZTY3YjY3LWQxMmEtNDg5MS1hMzdhLTA2NzliNDc4YmFhNiIsInN1YiI6MzA0OTE2MDYzLCJ1c2VyIjp7ImlkIjozMDQ5MTYwNjMsImVtYWlsIjoiYW5kcmFkZS5kYW5pZWwxNTAzOTlAZ21haWwuY29tIn0sInVzZXJfdHlwZSI6ImF1dGhlbnRpY2F0ZWQifQ.Utx2-Hy6MLtkIOq1ppukfc5V7YCTt3GroRpDGzJOu6H9ajbdQSEfe2k0FzB8LIhPOSRp2f9nO8PCpaK0pK5hLg';
-const PIPEFY_PIPE_IDS = ['306447075'];
 
-// se quiser mapear campos específicos do Pipefy (opcional)
+const PIPEFY_PIPE_IDS = ['306447075']; // seu pipe
+// Campos opcionais (internal_id) para mapear status/owner do Pipefy em meta[]
 const PIPEFY_STATUS_FIELD = process.env.PIPEFY_STATUS_FIELD || '';
 const PIPEFY_OWNER_EMAIL_FIELD = process.env.PIPEFY_OWNER_EMAIL_FIELD || '';
 
@@ -35,16 +36,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 const FRONT_DIR  = path.join(__dirname, 'frontend');
 
+// Static + SPA
 app.use(express.static(FRONT_DIR));
 app.get('/', (_req, res) => res.sendFile(path.join(FRONT_DIR, 'index.html')));
 
+// Health
 app.get('/api', (_req, res) => res.json({ ok: true, service: 'PMO Pro API' }));
 
 // Inspeciona campos do Pipe (para descobrir internal_id)
 app.get('/api/inspect/fields', async (req, res) => {
   try {
     const pipeId = req.query.pipeId || PIPEFY_PIPE_IDS[0];
-    if (!PIPEFY_TOKEN || !pipeId) return res.status(400).json({ error: 'Configure PIPEFY_TOKEN/PIPEFY_PIPE_IDS' });
+    if (!PIPEFY_TOKEN || !pipeId) {
+      return res.status(400).json({ error: 'Configure PIPEFY_TOKEN e PIPEFY_PIPE_IDS' });
+    }
 
     const url = 'https://api.pipefy.com/graphql';
     const query = `query($id:ID!){
@@ -63,7 +68,8 @@ app.get('/api/inspect/fields', async (req, res) => {
     if (!r.ok) throw new Error('Pipefy request failed ' + r.status);
     const json = await r.json();
     if (json.errors) throw new Error('Pipefy errors: ' + JSON.stringify(json.errors));
-    const formFields = json.data.pipe.start_form_fields || [];
+
+    const formFields  = json.data.pipe.start_form_fields || [];
     const phaseFields = (json.data.pipe.phases || []).flatMap(p => p.fields || []);
     const all = [...formFields, ...phaseFields];
     res.json(all.map(f => ({ label: f.label, internal_id: f.internal_id, type: f.type })));
@@ -73,7 +79,7 @@ app.get('/api/inspect/fields', async (req, res) => {
   }
 });
 
-// Sincroniza cards do Pipefy -> projects
+// Sincroniza cards do Pipefy -> tabela projects
 app.post('/api/sync/pipefy', async (_req, res) => {
   try {
     if (!PIPEFY_TOKEN || PIPEFY_PIPE_IDS.length === 0) {
@@ -94,16 +100,17 @@ app.post('/api/sync/pipefy', async (_req, res) => {
   }
 });
 
-// ======= COLETOR DE CARDS (usa allCards; fallback por fases) =======
+// ======= COLETOR DE CARDS (usa allCards; fallback por fases; sem createdAt/updatedAt) =======
 async function fetchPipeProjects(pipeId) {
   const url = 'https://api.pipefy.com/graphql';
   const headers = { 'Authorization': `Bearer ${PIPEFY_TOKEN}`, 'Content-Type': 'application/json' };
 
-  // 1) Tenta via allCards (modelo novo da API)
+  // 1) Tenta via allCards (API nova)
   let query = `query($pipeId:ID!){
     allCards(pipeId:$pipeId, first:200){
       edges{ node{
-        id title createdAt updatedAt
+        id
+        title
         fields{ name value field { id label internal_id } }
       } }
     }
@@ -112,7 +119,7 @@ async function fetchPipeProjects(pipeId) {
   let r = await fetch(url, { method: 'POST', headers, body });
   let json = await r.json();
 
-  // Se falhar, usa fallback por fases
+  // Se falhar, fallback por fases
   if (!r.ok || json.errors || !json?.data?.allCards) {
     query = `query($id:ID!){
       pipe(id:$id){
@@ -121,7 +128,8 @@ async function fetchPipeProjects(pipeId) {
           name
           cards(first:200){
             edges{ node{
-              id title createdAt updatedAt
+              id
+              title
               fields{ name value field { id label internal_id } }
             } }
           }
@@ -152,21 +160,29 @@ function mapCards(nodes) {
     const look = (iid) => (iid ? (meta[iid] ?? null) : null);
     const status = look(PIPEFY_STATUS_FIELD) || 'imported';
     const owner_email = look(PIPEFY_OWNER_EMAIL_FIELD) || null;
+
+    // Sem createdAt/updatedAt vindos do Pipefy -> usa data/hora atual
+    const nowISO = new Date().toISOString();
+
     return {
       external_id: n.id,
       name: n.title,
       status,
       owner_email,
       meta,
-      created_at: n.createdAt ? new Date(n.createdAt).toISOString() : new Date().toISOString(),
-      updated_at: n.updatedAt ? new Date(n.updatedAt).toISOString() : new Date().toISOString()
+      created_at: nowISO,
+      updated_at: nowISO
     };
   });
 }
 
 // ======= API profissionais & alocações =======
 app.get('/api/professionals', async (_req, res) => {
-  const { data, error } = await supabase.from('professionals').select('*').order('created_at', { ascending: false }).limit(500);
+  const { data, error } = await supabase
+    .from('professionals')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(500);
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
 });
@@ -174,7 +190,11 @@ app.get('/api/professionals', async (_req, res) => {
 app.post('/api/professionals', async (req, res) => {
   const { name, email, role } = req.body || {};
   if (!name) return res.status(400).json({ error: 'name obrigatório' });
-  const { data, error } = await supabase.from('professionals').insert([{ name, email, role }]).select('*').single();
+  const { data, error } = await supabase
+    .from('professionals')
+    .insert([{ name, email, role }])
+    .select('*')
+    .single();
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
 });
@@ -191,13 +211,19 @@ app.get('/api/allocations', async (_req, res) => {
 
 app.post('/api/allocations', async (req, res) => {
   const { project_id, professional_id, hours, start_date, end_date } = req.body || {};
-  if (!project_id || !professional_id) return res.status(400).json({ error: 'project_id e professional_id são obrigatórios' });
-  const { data, error } = await supabase.from('allocations').insert([{ project_id, professional_id, hours, start_date, end_date }]).select('*').single();
+  if (!project_id || !professional_id) {
+    return res.status(400).json({ error: 'project_id e professional_id são obrigatórios' });
+  }
+  const { data, error } = await supabase
+    .from('allocations')
+    .insert([{ project_id, professional_id, hours, start_date, end_date }])
+    .select('*')
+    .single();
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
 });
 
-// ======= SPA fallback =======
+// ======= SPA fallback (qualquer rota não-API serve index.html) =======
 app.get('*', (req, res) => {
   const p = path.join(FRONT_DIR, req.path);
   res.sendFile(path.extname(p) ? p : path.join(FRONT_DIR, 'index.html'), (err) => {

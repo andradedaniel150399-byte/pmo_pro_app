@@ -1,0 +1,14 @@
+// supabase-client.js
+
+// As suas chaves de acesso ao Supabase.
+// É seguro expô-las no lado do cliente (navegador)
+// desde que tenha a Row Level Security (RLS) ativa nas suas tabelas.
+const supabaseUrl = 'https://zhwzrrujseuivxolfuwh.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpod3pycnVqc2V1aXZ4b2xmdXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3Nzk3MDAsImV4cCI6MjA3MjM1NTcwMH0.ksirOdbBuOziwVy9KIisyyoO35kLHzbJbh00Go6n424';
+
+// Cria e exporta o cliente Supabase para ser usado noutros ficheiros
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+// Torna o cliente acessível globalmente (para simplicidade)
+window.supabase = supabase;
+

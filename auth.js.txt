@@ -1,0 +1,99 @@
+// auth.js
+
+// Espera que o DOM esteja completamente carregado para executar o script
+document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const googleLoginBtn = document.getElementById('google-login-btn');
+    const notification = document.getElementById('notification');
+
+    // Função para mostrar notificações de erro ou sucesso
+    function showNotification(message, isError = false) {
+        notification.textContent = message;
+        notification.className = 'notification ' + (isError ? 'error' : 'success');
+        notification.classList.add('show');
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 5000);
+    }
+    
+    // --- LÓGICA DE LOGIN ---
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = loginForm.email.value;
+            const password = loginForm.password.value;
+
+            const { error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                showNotification(`Erro no login: ${error.message}`, true);
+            } else {
+                // O redirecionamento é tratado pelo listener onAuthStateChange
+                showNotification('Login bem-sucedido! A redirecionar...');
+                window.location.href = '/app.html';
+            }
+        });
+    }
+
+    // --- LÓGICA DE REGISTO ---
+    if (registerForm) {
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = registerForm.email.value;
+            const password = registerForm.password.value;
+
+            const { error } = await supabase.auth.signUp({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                showNotification(`Erro no registo: ${error.message}`, true);
+            } else {
+                showNotification('Registo bem-sucedido! Por favor, verifique o seu e-mail para confirmar a conta.');
+                registerForm.reset();
+            }
+        });
+    }
+
+    // --- LÓGICA DE LOGIN COM GOOGLE ---
+    if (googleLoginBtn) {
+        googleLoginBtn.addEventListener('click', async () => {
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+            });
+
+            if (error) {
+                showNotification(`Erro com o login Google: ${error.message}`, true);
+            }
+        });
+    }
+    
+    // --- VERIFICAÇÃO GLOBAL DO ESTADO DE AUTENTICAÇÃO ---
+    // Este listener reage a qualquer mudança no estado de login (login, logout)
+    supabase.auth.onAuthStateChange((event, session) => {
+        const user = session?.user;
+        const onAuthPage = window.location.pathname === '/' || window.location.pathname === '/index.html';
+        const onAppPage = window.location.pathname === '/app.html';
+        
+        // Se o utilizador está logado
+        if (user) {
+            // E está na página de login, redireciona para a aplicação
+            if (onAuthPage) {
+                window.location.replace('/app.html');
+            }
+        } 
+        // Se o utilizador NÃO está logado
+        else {
+            // E está na página da aplicação, redireciona para o login
+            if (onAppPage) {
+                window.location.replace('/index.html');
+            }
+        }
+    });
+});
+

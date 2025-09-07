@@ -1,0 +1,58 @@
+/* --- GERAL & FONTES --- */
+body {
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- ESTILOS PARA FORMULÁRIOS (LOGIN/REGISTO) --- */
+.form-input {
+    @apply appearance-none rounded-lg relative block w-full px-3 py-3 border border-slate-300 dark:border-slate-600 placeholder-slate-500 text-slate-900 dark:text-white bg-white dark:bg-slate-700 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm;
+}
+
+.button-primary {
+    @apply w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-slate-800;
+}
+
+.button-secondary {
+    @apply w-full flex items-center justify-center py-3 px-4 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-slate-800;
+}
+
+.button-secondary svg {
+    @apply mr-3;
+}
+
+/* --- TABS (LOGIN & CONFIGURAÇÕES) --- */
+.tab-button {
+    @apply whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-500;
+}
+.tab-button.active {
+    @apply border-primary-500 text-primary-600 dark:border-primary-400 dark:text-primary-400;
+}
+
+/* --- SIDEBAR DE NAVEGAÇÃO (APP) --- */
+.nav-item {
+    @apply flex items-center p-3 rounded-lg text-slate-300 hover:bg-slate-700/50 hover:text-white transition-colors duration-200;
+}
+.nav-item.active {
+    @apply bg-slate-700 text-white;
+}
+.nav-item svg {
+    @apply h-6 w-6;
+}
+
+/* --- COMPONENTES GLOBAIS --- */
+.spinner {
+    border: 2px solid #f3f3f3; /* Light grey */
+    border-top: 2px solid #f59e0b; /* Primary color */
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+

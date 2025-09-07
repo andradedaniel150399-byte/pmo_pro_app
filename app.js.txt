@@ -1,0 +1,211 @@
+// app.js
+
+// Estado global da aplicação
+const state = {
+    user: null,
+    professionals: [],
+    subscriptions: [] // Para guardar as subscrições de tempo real
+};
+
+// --- FUNÇÕES DE INICIALIZAÇÃO E AUTENTICAÇÃO ---
+
+// Verifica a sessão do utilizador assim que a página carrega
+async function checkUserSession() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+        state.user = session.user;
+        document.getElementById('user-email').textContent = state.user.email;
+        initializeApp(); // Inicia o resto da aplicação
+    } else {
+        // Se não houver sessão, redireciona para a página de login
+        window.location.replace('/index.html');
+    }
+}
+
+// Função de Logout
+async function handleLogout() {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+        console.error('Erro ao fazer logout:', error);
+    } else {
+        // O listener onAuthStateChange no auth.js irá tratar do redirecionamento
+        window.location.replace('/index.html');
+    }
+}
+
+// Inicia a aplicação principal após a verificação do utilizador
+async function initializeApp() {
+    setupEventListeners();
+    switchView('dashboard');
+    await loadInitialData();
+    setupRealtimeSubscriptions();
+    document.getElementById('loading-overlay').style.display = 'none';
+}
+
+// --- CARREGAMENTO DE DADOS E TEMPO REAL ---
+
+// Carrega os dados iniciais do Supabase
+async function loadInitialData() {
+    const { data, error } = await supabase
+        .from('professionals')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+    if (error) {
+        console.error('Erro ao carregar profissionais:', error);
+    } else {
+        state.professionals = data;
+        renderProfessionalsList();
+    }
+}
+
+// Configura as subscrições para atualizações em tempo real
+function setupRealtimeSubscriptions() {
+    // Limpa subscrições antigas para evitar duplicados
+    state.subscriptions.forEach(sub => sub.unsubscribe());
+    state.subscriptions = [];
+
+    const professionalsSubscription = supabase.channel('public:professionals')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'professionals' },
+            (payload) => {
+                console.log('Alteração recebida nos profissionais:', payload);
+                // Recarrega os dados para manter a consistência
+                loadInitialData();
+            }
+        )
+        .subscribe();
+        
+    state.subscriptions.push(professionalsSubscription);
+}
+
+
+// --- RENDERIZAÇÃO DA UI (INTERFACE DO UTILIZADOR) ---
+
+// Mostra a lista de profissionais na tabela
+function renderProfessionalsList() {
+    const container = document.getElementById('professionals-list-container');
+    if (!container) return;
+
+    let tableHTML = `
+        <table class="w-full text-sm text-left">
+            <thead class="text-xs uppercase bg-slate-50 dark:bg-slate-700">
+                <tr>
+                    <th class="px-6 py-3">Nome</th>
+                    <th class="px-6 py-3">Cargo</th>
+                    <th class="px-6 py-3">Custo/Hora (R$)</th>
+                    <th class="px-6 py-3"><span class="sr-only">Ações</span></th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+    if (state.professionals.length === 0) {
+        tableHTML += `<tr><td colspan="4" class="text-center py-10 text-slate-500">Nenhum profissional cadastrado.</td></tr>`;
+    } else {
+        state.professionals.forEach(p => {
+            tableHTML += `
+                <tr class="bg-white dark:bg-slate-800 border-b dark:border-slate-700">
+                    <th class="px-6 py-4 font-medium">${p.name}</th>
+                    <td class="px-6 py-4">${p.role}</td>
+                    <td class="px-6 py-4">R$ ${p.cost}</td>
+                    <td class="px-6 py-4 text-right">
+                        <button data-id="${p.id}" class="remove-prof-btn font-medium text-red-600 hover:underline">Remover</button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    tableHTML += '</tbody></table>';
+    container.innerHTML = tableHTML;
+
+    // Adiciona event listeners aos novos botões de remoção
+    document.querySelectorAll('.remove-prof-btn').forEach(button => {
+        button.addEventListener('click', handleRemoveProfessional);
+    });
+}
+
+// --- MANIPULADORES DE EVENTOS (EVENT HANDLERS) ---
+
+// Adicionar um novo profissional
+async function handleAddProfessional(e) {
+    e.preventDefault();
+    const form = e.target;
+    const name = form.elements['prof-name'].value;
+    const role = form.elements['prof-role'].value;
+    const cost = form.elements['prof-cost'].value;
+
+    if (!name || !role || !cost) {
+        alert('Por favor, preencha todos os campos.');
+        return;
+    }
+
+    const { error } = await supabase.from('professionals').insert({
+        name: name,
+        role: role,
+        cost: parseFloat(cost),
+        user_id: state.user.id // Associa o profissional ao utilizador logado
+    });
+
+    if (error) {
+        console.error('Erro ao adicionar profissional:', error);
+        alert(`Erro: ${error.message}`);
+    } else {
+        form.reset();
+        // Os dados serão atualizados automaticamente pela subscrição de tempo real
+    }
+}
+
+// Remover um profissional
+async function handleRemoveProfessional(e) {
+    const professionalId = e.target.dataset.id;
+    if (!confirm('Tem a certeza que quer remover este profissional?')) {
+        return;
+    }
+
+    const { error } = await supabase.from('professionals').delete().eq('id', professionalId);
+
+    if (error) {
+        console.error('Erro ao remover profissional:', error);
+        alert(`Erro: ${error.message}`);
+    }
+    // A UI será atualizada pela subscrição de tempo real
+}
+
+// Lógica para alternar entre as vistas (Dashboard, Kanban, etc.)
+function switchView(viewId) {
+    document.querySelectorAll('.view-content').forEach(view => {
+        view.classList.add('hidden');
+    });
+    document.getElementById(`view-${viewId}`).classList.remove('hidden');
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    document.getElementById(`nav-${viewId}`).classList.add('active');
+
+    const viewTitles = {
+        dashboard: 'Dashboard',
+        kanban: 'Kanban',
+        settings: 'Configurações'
+    };
+    document.getElementById('view-title').textContent = viewTitles[viewId];
+}
+
+// Configura todos os event listeners da aplicação
+function setupEventListeners() {
+    document.getElementById('logout-btn').addEventListener('click', handleLogout);
+    document.getElementById('add-professional-form').addEventListener('submit', handleAddProfessional);
+    
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const viewId = item.id.replace('nav-', '');
+            switchView(viewId);
+        });
+    });
+}
+
+
+// --- PONTO DE ENTRADA DA APLICAÇÃO ---
+// Espera que o DOM esteja carregado para começar a verificação da sessão
+document.addEventListener('DOMContentLoaded', checkUserSession);
+

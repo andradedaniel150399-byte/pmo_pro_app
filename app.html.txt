@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMO Pro - Aplicação</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SUPABASE & APP SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js" defer></script>
+    <script src="app.js" defer></script>
+</head>
+<body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-sans">
+
+    <div id="loading-overlay" class="fixed inset-0 bg-slate-900 bg-opacity-80 flex-col text-white flex items-center justify-center transition-opacity duration-300 z-2000">
+        <div class="spinner !w-12 !h-12 !border-4"></div>
+        <p class="mt-4 text-lg font-semibold">A carregar os seus dados...</p>
+    </div>
+
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-20 lg:w-64 bg-slate-900 text-white flex flex-col transition-all duration-300">
+            <div class="h-16 flex items-center justify-center lg:justify-start lg:pl-6 border-b border-slate-700/50">
+                <span class="text-2xl font-bold text-primary-400">P</span><span class="hidden lg:inline ml-2 text-xl font-bold">PMO Pro</span>
+            </div>
+            <nav class="flex-1 px-2 lg:px-4 py-4 space-y-2">
+                <a href="#" id="nav-dashboard" class="nav-item active"><svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg><span class="hidden lg:inline ml-4 font-medium">Dashboard</span></a>
+                <a href="#" id="nav-kanban" class="nav-item"><svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path></svg><span class="hidden lg:inline ml-4 font-medium">Kanban</span></a>
+                <a href="#" id="nav-settings" class="nav-item"><svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span class="hidden lg:inline ml-4 font-medium">Configurações</span></a>
+            </nav>
+            <div class="mt-auto p-4">
+                 <button id="logout-btn" class="nav-item w-full"><svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg><span class="hidden lg:inline ml-4 font-medium">Sair</span></button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="h-16 bg-white dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-6">
+                <h1 id="view-title" class="text-xl font-semibold">Dashboard</h1>
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm text-right">
+                        <p class="font-medium text-slate-800 dark:text-slate-200">Utilizador Logado</p>
+                        <p id="user-email" class="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[200px]"></p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-6">
+                <!-- Dashboard View -->
+                <div id="view-dashboard" class="view-content">
+                    <p class="text-slate-600 dark:text-slate-400">Bem-vindo ao seu Dashboard. Funcionalidades futuras serão adicionadas aqui.</p>
+                </div>
+                <!-- Kanban View -->
+                <div id="view-kanban" class="view-content hidden">
+                     <p class="text-slate-600 dark:text-slate-400">A sua vista Kanban aparecerá aqui.</p>
+                </div>
+                <!-- Settings View -->
+                <div id="view-settings" class="view-content hidden space-y-6">
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
+                        <h3 class="font-semibold mb-4 text-lg">Gestão da Equipa</h3>
+                        <div id="professionals-list-container" class="mb-6">
+                            <!-- A lista de profissionais será renderizada aqui -->
+                        </div>
+                        <form id="add-professional-form" class="mt-4 flex flex-col sm:flex-row gap-4 items-end p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                            <div class="flex-1 w-full">
+                                <label for="prof-name" class="text-sm font-medium">Nome</label>
+                                <input type="text" id="prof-name" name="prof-name" required class="form-input mt-1 w-full">
+                            </div>
+                            <div class="flex-1 w-full">
+                                <label for="prof-role" class="text-sm font-medium">Cargo</label>
+                                <input type="text" id="prof-role" name="prof-role" required class="form-input mt-1 w-full">
+                            </div>
+                            <div class="w-full sm:w-32">
+                                <label for="prof-cost" class="text-sm font-medium">Custo/Hora</label>
+                                <input type="number" id="prof-cost" name="prof-cost" required class="form-input mt-1 w-full">
+                            </div>
+                            <button type="submit" class="button-primary w-full sm:w-auto">Adicionar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+

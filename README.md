@@ -3,27 +3,31 @@ Suba este repositório único no Render como **Web Service**. Frontend e backend
 
 ## Variáveis de ambiente
 
-1. **Obtenha as chaves no Supabase**
-   - Abra o painel do projeto → *Project Settings* → *API*.
-   - Copie os campos **Project URL**, **service\_role** e **anon public**.
+### Supabase
 
-2. **Crie o arquivo `.env` local**
-   - Na raiz, crie um arquivo `.env` (veja `.env.example`) e defina:
-     ```
-     SUPABASE_URL=<Project URL>
-     SUPABASE_SERVICE_KEY=<service_role>
-     SUPABASE_ANON_KEY=<anon public>
-     PIPEFY_TOKEN=...
-     PIPEFY_PIPE_IDS=...
-     PIPEFY_STATUS_FIELD=...
-     PIPEFY_OWNER_EMAIL_FIELD=...
-     ```
-   - O arquivo `.env` está listado no `.gitignore` para evitar commits acidentais.
+1. Acesse o painel do projeto e clique em **Settings → API**.
+2. Copie os valores dos campos abaixo e use-os nas variáveis correspondentes:
+   - `SUPABASE_URL` → **Project URL**
+   - `SUPABASE_SERVICE_KEY` → **service_role**
+   - `SUPABASE_ANON_KEY` → **anon public**
 
-3. **Configure no Render**
-   - No serviço hospedado, abra a aba **Environment**.
-   - Adicione as variáveis `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_ANON_KEY` e demais chaves com os respectivos valores.
-   - Em produção, utilize os mesmos valores do `.env` local.
+### Pipefy
+
+- `PIPEFY_TOKEN`: token de API disponível em <https://app.pipefy.com/profile/developers>.
+- `PIPEFY_PIPE_IDS`: IDs dos pipes a sincronizar (separe múltiplos com vírgula).
+- `PIPEFY_STATUS_FIELD`: nome ou ID do campo de status usado nos cards.
+- `PIPEFY_OWNER_EMAIL_FIELD`: nome ou ID do campo que armazena o e-mail do responsável.
+
+### Arquivo `.env` local
+
+1. Copie `.env.example` para `.env` e preencha com os valores obtidos.
+2. O arquivo `.env` está listado no `.gitignore` para evitar commits acidentais.
+
+### Configuração no Render
+
+1. Após criar o serviço, abra a aba **Environment**.
+2. Cadastre `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_ANON_KEY`, `PIPEFY_TOKEN`, `PIPEFY_PIPE_IDS`, `PIPEFY_STATUS_FIELD` e `PIPEFY_OWNER_EMAIL_FIELD` com os mesmos valores do `.env` local.
+3. Salve e reinicie o serviço para aplicar.
 
 ## Deploy
 1. GitHub → New repo → Upload files (tudo desta pasta).

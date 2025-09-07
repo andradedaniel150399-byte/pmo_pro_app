@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <title>PMO Pro • Área Logada</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="./supabase-client.js" defer></script>
+  <script>
+    window.API_BASE = "";
+    window.PIPEFY_SYNC_URL = "/api/sync/pipefy";
+  </script>
+  <script src="./app.js" defer></script>
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900">
+  <main class="max-w-6xl mx-auto p-6">
+    <header class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold">PMO Pro</h1>
+        <p class="text-sm text-gray-600">Logado como <span id="user-email">...</span></p>
+      </div>
+      <div class="flex gap-2">
+        <button id="btn-sync-pipefy" class="btn">🔄 Sincronizar Pipefy → Projetos</button>
+        <button id="btn-logout" class="btn-outline">Sair</button>
+      </div>
+    </header>
+
+    <div class="grid md:grid-cols-3 gap-6">
+      <section class="card md:col-span-2">
+        <h2 class="text-xl font-semibold mb-3">Projetos</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left" id="tbl-projects">
+            <thead>
+              <tr class="border-b">
+                <th class="py-2 pr-4">Nome</th>
+                <th class="py-2 pr-4">External ID</th>
+                <th class="py-2 pr-4">Status</th>
+                <th class="py-2 pr-4">Owner (email)</th>
+                <th class="py-2 pr-4">Criado em</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p id="projects-empty" class="text-sm text-gray-500 mt-2 hidden">Nenhum projeto ainda.</p>
+      </section>
+
+      <section class="card">
+        <h2 class="text-lg font-semibold mb-3">Profissionais</h2>
+        <form id="pro-form" class="grid gap-2 mb-3">
+          <input id="pro-name" class="input" placeholder="Nome" required />
+          <input id="pro-email" class="input" placeholder="Email" />
+          <input id="pro-role" class="input" placeholder="Função/Role" />
+          <button class="btn" type="submit">Adicionar Profissional</button>
+        </form>
+        <ul id="pro-list" class="space-y-1 max-h-56 overflow-auto"></ul>
+      </section>
+    </div>
+
+    <section class="card mt-6">
+      <h2 class="text-lg font-semibold mb-3">Alocações</h2>
+      <form id="alloc-form" class="grid md:grid-cols-5 gap-2 mb-4">
+        <select id="alloc-project" class="input"></select>
+        <select id="alloc-professional" class="input"></select>
+        <input id="alloc-hours" type="number" min="1" class="input" placeholder="Horas" />
+        <input id="alloc-start" type="date" class="input" />
+        <input id="alloc-end" type="date" class="input" />
+        <button class="btn md:col-span-5" type="submit">Criar Alocação</button>
+      </form>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left" id="tbl-alloc">
+          <thead>
+            <tr class="border-b">
+              <th class="py-2 pr-4">Projeto</th>
+              <th class="py-2 pr-4">Profissional</th>
+              <th class="py-2 pr-4">Horas</th>
+              <th class="py-2 pr-4">Período</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="grid md:grid-cols-3 gap-4 mt-6">
+      <div class="kpi">
+        <span class="kpi-label">Projetos</span>
+        <span id="kpi-projects" class="kpi-value">0</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-label">Profissionais</span>
+        <span id="kpi-professionals" class="kpi-value">0</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-label">Alocações</span>
+        <span id="kpi-allocations" class="kpi-value">0</span>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

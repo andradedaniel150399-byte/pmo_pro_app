@@ -7,10 +7,11 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
     "@supabase/supabase-js": "^2.45.0",
-    "node-fetch": "^3.3.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^4.19.2",
+    "node-fetch": "^3.3.2"
   },
   "engines": {
     "node": ">=18"

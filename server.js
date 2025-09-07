@@ -5,20 +5,20 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // ===== Logs de segurança =====
 process.on('unhandledRejection', (e) => console.error('[unhandledRejection]', e));
 process.on('uncaughtException',  (e) => console.error('[uncaughtException]', e));
 
-// ===== Config fixa (pedido do usuário) =====
-const SUPABASE_URL = 'https://zhwzrrujseuivxolfuwh.supabase.co';
-const SUPABASE_SERVICE_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpod3pycnVqc2V1aXZ4b2xmdXdoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Njc3OTcwMCwiZXhwIjoyMDcyMzU1NzAwfQ.xwCQlLyx9_vrqxIkE6HWzKWPbmtJyrAceqR8pWN6OZA';
-
-const PIPEFY_TOKEN =
-  'eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJQaXBlZnkiLCJpYXQiOjE3NTcyNjQzMTEsImp0aSI6IjIwZTY3YjY3LWQxMmEtNDg5MS1hMzdhLTA2NzliNDc4YmFhNiIsInN1YiI6MzA0OTE2MDYzLCJ1c2VyIjp7ImlkIjozMDQ5MTYwNjMsImVtYWlsIjoiYW5kcmFkZS5kYW5pZWwxNTAzOTlAZ21haWwuY29tIn0sInVzZXJfdHlwZSI6ImF1dGhlbnRpY2F0ZWQifQ.Utx2-Hy6MLtkIOq1ppukfc5V7YCTt3GroRpDGzJOu6H9ajbdQSEfe2k0FzB8LIhPOSRp2f9nO8PCpaK0pK5hLg';
-
-const PIPEFY_PIPE_IDS = ['306447075']; // seu pipe
+// ===== Configuração via variáveis de ambiente =====
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const PIPEFY_TOKEN = process.env.PIPEFY_TOKEN;
+const PIPEFY_PIPE_IDS = (process.env.PIPEFY_PIPE_IDS || '').split(',').filter(Boolean);
 const PIPEFY_STATUS_FIELD = process.env.PIPEFY_STATUS_FIELD || '';
 const PIPEFY_OWNER_EMAIL_FIELD = process.env.PIPEFY_OWNER_EMAIL_FIELD || '';
 
@@ -29,6 +29,14 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+// Expor variáveis públicas para o frontend
+app.get('/env.js', (_req, res) => {
+  res.type('application/javascript');
+  res.send(
+    `window.env = { SUPABASE_URL: '${SUPABASE_URL}', SUPABASE_ANON_KEY: '${SUPABASE_ANON_KEY}' };`
+  );
+});
 
 // __dirname (ESM)
 const __filename = fileURLToPath(import.meta.url);

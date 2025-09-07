@@ -1,12 +1,7 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
-// --- INFORMAÇÕES DE CONEXÃO COM O SUPABASE ---
-// É seguro expor estas chaves numa aplicação web (client-side)
-// desde que tenha as regras de Row Level Security (RLS) ativas nas suas tabelas.
-
+// --- SUPABASE CLIENT SETUP ---
+// Substitua com os seus próprios URL e Chave Anon do Supabase
 const supabaseUrl = 'https://zhwzrrujseuivxolfuwh.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpod3pycnVqc2V1aXZ4b2xmdXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3Nzk3MDAsImV4cCI6MjA3MjM1NTcwMH0.ksirOdbBuOziwVy9KIisyyoO35kLHzbJbh00Go6n424';
 
-// Cria e exporta o cliente Supabase para ser usado noutros ficheiros
-export const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 

@@ -25,7 +25,8 @@ const PIPEFY_OWNER_EMAIL_FIELD = process.env.PIPEFY_OWNER_EMAIL_FIELD || '';
 const app = express();
 app.use(cors());
 app.use(express.json());
-const PORT = process.env.PORT || 8080;
+// Use port provided by environment (Render) or default to 3000 for local dev
+const PORT = process.env.PORT || 3000;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 

@@ -1,338 +1,218 @@
-import { supabase } from './supabase-client.js';
+// --- MAIN APPLICATION LOGIC ---
 
-// --- ESTADO GLOBAL DA APLICAÇÃO ---
-const state = {
-    user: null, // Guardará a informação do utilizador logado
-    currentView: 'dashboard',
-    theme: localStorage.getItem('theme') || 'light',
-    dashboardLayout: JSON.parse(localStorage.getItem('dashboardLayout')) || {
-        order: ['kpi-revenue', 'kpi-pipeline', 'kpi-active', 'kpi-utilization', 'chart-revenue', 'chart-utilization'],
-        widgets: {
-            'kpi-revenue': { visible: true, size: 'col-span-1 md:col-span-1' },
-            'kpi-pipeline': { visible: true, size: 'col-span-1 md:col-span-1' },
-            'kpi-active': { visible: true, size: 'col-span-1 md:col-span-1' },
-            'kpi-utilization': { visible: true, size: 'col-span-1 md:col-span-1' },
-            'chart-revenue': { visible: true, size: 'col-span-1 md:col-span-2' },
-            'chart-utilization': { visible: true, size: 'col-span-1 md:col-span-2' },
-        }
-    },
-    data: {
-        projects: [], 
-        professionals: [], 
-        allocations: [], 
-        comments: [],
-        capacityData: { labels: ['Set', 'Out', 'Nov', 'Dez', 'Jan', 'Fev'], totalCapacity: [1280, 1344, 1280, 1216, 1344, 1216], allocated: [1100, 1050, 1150, 900, 700, 400] },
-        settings: { workHoursPerDay: 8 }
-    },
-    subscriptions: [] // Guardará as subscrições de tempo real
-};
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // --- STATE & GLOBAL VARIABLES ---
+    const state = {
+        currentUser: null,
+        currentView: 'dashboard',
+        data: {
+            projects: [], 
+            professionals: [], 
+            allocations: [], 
+            comments: []
+        },
+        subscriptions: []
+    };
 
-// --- DEFINIÇÃO DOS WIDGETS DO DASHBOARD ---
-const widgets = [
-    { id: 'kpi-revenue', title: 'Receita (Ganhos)', type: 'kpi', content: () => `R$ ${state.data.projects.filter(p=>p.status==='Ganho').reduce((s,p)=>s+p.fees,0)/1000}k` },
-    { id: 'kpi-pipeline', title: 'Pipeline (Propostas)', type: 'kpi', content: () => `R$ ${state.data.projects.filter(p=>p.status==='Proposta').reduce((s,p)=>s+p.fees,0)/1000}k` },
-    { id: 'kpi-active', title: 'Projetos Ativos', type: 'kpi', content: () => state.data.projects.filter(p=>p.status==='Ativo').length },
-    { id: 'kpi-utilization', title: 'Utilização Média', type: 'kpi', content: () => `${state.data.professionals.length > 0 ? Math.round(state.data.professionals.reduce((s,p)=>s+(p.utilization || 0),0)/state.data.professionals.length) : 0}%` },
-    { id: 'chart-revenue', title: 'Receita por Status', type: 'chart', content: renderRevenueStatusChart },
-    { id: 'chart-utilization', title: 'Utilização por Profissional', type: 'chart', content: renderUtilizationChart },
-];
-
-// --- ELEMENTOS DA UI ---
-const ui = {
-    navItems: document.querySelectorAll('.nav-item'),
-    views: document.querySelectorAll('.view-content'),
-    viewTitle: document.getElementById('view-title'),
-    themeToggle: document.getElementById('theme-toggle'),
-    lightIcon: document.getElementById('theme-icon-light'),
-    darkIcon: document.getElementById('theme-icon-dark'),
-    projectModal: document.getElementById('project-modal'),
-    projectModalContent: document.getElementById('modal-content'),
-    confirmModal: document.getElementById('confirmation-modal'),
-    confirmModalMsg: document.getElementById('modal-message'),
-    confirmBtn: document.getElementById('modal-confirm-btn'),
-    cancelBtn: document.getElementById('modal-cancel-btn'),
-    dashboardGrid: document.getElementById('dashboard-grid'),
-    kanbanBoard: document.getElementById('kanban-board'),
-    personalizeBtn: document.getElementById('personalize-btn'),
-    personalizeMenu: document.getElementById('personalize-menu'),
-    personalizeContainer: document.getElementById('personalize-container'),
-    widgetTogglesContainer: document.getElementById('widget-toggles'),
-    analyzeCapacityBtn: document.getElementById('analyze-capacity-btn'),
-    generateForecastBtn: document.getElementById('generate-forecast-btn'),
-    loadingOverlay: document.getElementById('loading-overlay'),
-    logoutBtn: document.getElementById('logout-btn'),
-    userInfo: document.getElementById('user-info'),
-};
-const titles = { dashboard: 'Dashboard', kanban: 'Kanban de Projetos', planner: 'Planejador Visual', portfolio: 'Portfólio de Projetos', profitability: 'Análise de Rentabilidade', forecast: 'Forecast de Receita', capacity: 'Análise de Capacidade', management: 'Gestão de Alocações', settings: 'Configurações' };
-
-// --- FUNÇÕES UTILITÁRIAS ---
-function showNotification(message, type = 'success', duration = 3000) {
-    const container = document.getElementById('notification-container');
-    const notif = document.createElement('div');
-    const colors = type === 'success' ? 'bg-emerald-500' : (type === 'error' ? 'bg-red-500' : 'bg-sky-500');
-    notif.className = `notification ${colors} text-white text-sm font-bold px-4 py-3 rounded-lg shadow-md`;
-    notif.textContent = message;
-    container.appendChild(notif);
-    setTimeout(() => notif.classList.add('show'), 10);
-    setTimeout(() => { notif.classList.remove('show'); setTimeout(() => notif.remove(), 300); }, duration);
-}
-
-function showConfirmationModal(messages, onConfirm) {
-    ui.confirmModalMsg.innerHTML = messages.map(msg => `<p>${msg}</p>`).join('');
-    ui.confirmModal.classList.remove('hidden');
-    ui.confirmBtn.onclick = () => { onConfirm(); hideConfirmationModal(); };
-    ui.cancelBtn.onclick = () => hideConfirmationModal();
-}
-
-function hideConfirmationModal() { ui.confirmModal.classList.add('hidden'); }
-
-// --- LIGAÇÃO COM O SUPABASE ---
-async function fetchData(tableName) {
-    const { data, error } = await supabase.from(tableName).select('*');
-    if (error) {
-        console.error(`Erro ao carregar ${tableName}:`, error);
-        showNotification(`Erro ao carregar ${tableName}.`, 'error');
-        return [];
-    }
-    return data;
-}
-
-function setupRealtimeSubscriptions() {
-    state.subscriptions.forEach(sub => sub.unsubscribe());
-    state.subscriptions = [];
-
-    const createSubscription = (table, primaryKey, stateKey) => {
-        const sub = supabase.channel(`public:${table}`)
-            .on('postgres_changes', { event: '*', schema: 'public', table: table }, (payload) => {
-                console.log(`Alteração recebida na tabela ${table}!`, payload);
-                
-                // Filtra para garantir que a alteração pertence ao utilizador logado
-                if (payload.new?.user_id !== state.user.id && payload.old?.user_id !== state.user.id) {
-                    return;
-                }
-
-                const record = payload.new;
-                const oldRecordId = payload.old?.id;
-                const eventType = payload.eventType;
-
-                if (eventType === 'INSERT') {
-                    state.data[stateKey].push(record);
-                }
-                if (eventType === 'UPDATE') {
-                    const index = state.data[stateKey].findIndex(item => item[primaryKey] === record[primaryKey]);
-                    if (index > -1) state.data[stateKey][index] = record;
-                }
-                if (eventType === 'DELETE') {
-                     state.data[stateKey] = state.data[stateKey].filter(item => item[primaryKey] !== oldRecordId);
-                }
-                renderAllViews(); 
-            })
-            .subscribe();
-        state.subscriptions.push(sub);
+    const ui = {
+        navItems: document.querySelectorAll('.nav-item'),
+        views: document.querySelectorAll('.view-content'),
+        viewTitle: document.getElementById('view-title'),
+        loadingOverlay: document.getElementById('loading-overlay'),
+        userEmail: document.getElementById('user-email'),
+        logoutBtn: document.getElementById('logout-btn'),
     };
     
-    createSubscription('professionals', 'id', 'professionals');
-    createSubscription('projects', 'id', 'projects');
-    createSubscription('allocations', 'id', 'allocations');
-    createSubscription('comments', 'id', 'comments');
-}
+    const titles = { 
+        dashboard: 'Dashboard', 
+        kanban: 'Kanban de Projetos', 
+        planner: 'Planejador Visual', 
+        portfolio: 'Portfólio de Projetos', 
+        profitability: 'Análise de Rentabilidade', 
+        forecast: 'Forecast de Receita', 
+        capacity: 'Análise de Capacidade', 
+        management: 'Gestão de Alocações', 
+        settings: 'Configurações' 
+    };
 
-// --- GESTÃO DE VISTAS E TEMA ---
-function switchView(viewId) {
-    state.currentView = viewId;
-    ui.viewTitle.textContent = titles[viewId];
-    ui.navItems.forEach(item => {
-        item.classList.remove('bg-slate-700', 'text-white');
-        item.classList.add('hover:bg-slate-700/50');
-    });
-    const activeNavItem = document.getElementById(`nav-${viewId}`);
-    if(activeNavItem) {
-        activeNavItem.classList.add('bg-slate-700', 'text-white');
-        activeNavItem.classList.remove('hover:bg-slate-700/50');
+    // --- AUTHENTICATION CHECK ---
+    async function checkSession() {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error || !session) {
+            window.location.href = 'index.html';
+            return;
+        }
+        state.currentUser = session.user;
+        initializeApp();
     }
 
-    ui.views.forEach(view => view.classList.toggle('hidden', view.id !== `view-${viewId}`));
-    ui.personalizeContainer.style.display = viewId === 'dashboard' ? 'flex' : 'none';
-
-    if (viewId === 'planner') {
-        renderDraggableProjectsList();
-        renderPlannerView();
+    // --- INITIALIZATION ---
+    function initializeApp() {
+        ui.loadingOverlay.style.display = 'flex';
+        ui.userEmail.textContent = state.currentUser.email;
+        setupEventListeners();
+        switchView('dashboard');
+        fetchAllData();
     }
-}
 
-function applyTheme() {
-    if (state.theme === 'dark') {
-        document.documentElement.classList.add('dark');
-        ui.lightIcon.classList.add('hidden'); ui.darkIcon.classList.remove('hidden');
-    } else {
-        document.documentElement.classList.remove('dark');
-        ui.lightIcon.classList.remove('hidden'); ui.darkIcon.classList.add('hidden');
+    // --- DATA FETCHING & REALTIME ---
+    async function fetchAllData() {
+        await Promise.all([
+            fetchData('professionals'),
+            fetchData('projects'),
+            fetchData('allocations'),
+            fetchData('comments')
+        ]);
+        renderAllViews();
+        setupRealtimeSubscriptions();
+        ui.loadingOverlay.style.display = 'none';
     }
-}
 
-// --- FUNÇÕES DE RENDERIZAÇÃO ---
-function renderAllViews() {
-    renderDashboard(); 
-    renderKanbanBoard(); 
-    renderGanttChart();
-    renderCapacityGapChart(); 
-    renderProfitability();
-    renderProfessionalsList();
-    populateAllDropdowns();
-    if (state.currentView === 'planner') {
-        renderDraggableProjectsList();
-        renderPlannerView();
+    async function fetchData(tableName) {
+        const { data, error } = await supabase
+            .from(tableName)
+            .select('*')
+            .eq('user_id', state.currentUser.id);
+
+        if (error) {
+            console.error(`Error fetching ${tableName}:`, error);
+        } else {
+            state.data[tableName] = data;
+        }
     }
-}
-
-function renderDashboard() {
-    // ... (O código de renderização permanece o mesmo)
-}
-
-function renderKanbanBoard() {
-    // ... (O código de renderização permanece o mesmo)
-}
-
-// ... (Todas as outras funções de renderização como renderGanttChart, renderProfessionalsList, etc. permanecem aqui)
-// (Por brevidade, não as vou repetir, mas elas devem estar aqui)
-
-// --- HANDLERS DE EVENTOS ---
-function setupEventListeners() {
-    ui.navItems.forEach(item => item.addEventListener('click', e => { e.preventDefault(); switchView(item.id.split('-')[1]); }));
     
-    ui.themeToggle.addEventListener('click', () => {
-        state.theme = state.theme === 'light' ? 'dark' : 'light';
-        localStorage.setItem('theme', state.theme);
-        applyTheme();
-    });
+    function setupRealtimeSubscriptions() {
+        state.subscriptions.forEach(sub => sub.unsubscribe());
+        state.subscriptions = [];
 
-    if (ui.logoutBtn) {
+        const createSubscription = (table) => {
+            const sub = supabase.channel(`public:${table}`)
+                .on('postgres_changes', { event: '*', schema: 'public', table: table }, (payload) => {
+                    // Simple approach: refetch all data on any change
+                    fetchAllData();
+                })
+                .subscribe();
+            state.subscriptions.push(sub);
+        };
+        
+        createSubscription('professionals');
+        createSubscription('projects');
+        createSubscription('allocations');
+        createSubscription('comments');
+    }
+
+    // --- UI & VIEW MANAGEMENT ---
+    function switchView(viewId) {
+        state.currentView = viewId;
+        ui.viewTitle.textContent = titles[viewId];
+        ui.navItems.forEach(item => {
+            item.classList.toggle('bg-slate-700', item.id === `nav-${viewId}`);
+        });
+        ui.views.forEach(view => {
+            view.classList.toggle('hidden', view.id !== `view-${viewId}`);
+        });
+        renderAllViews();
+    }
+
+    function renderAllViews() {
+        // This function can be expanded to render specific views as needed
+        renderProfessionalsList();
+        // Add other render calls here, e.g., renderKanbanBoard();
+    }
+    
+    // --- SPECIFIC RENDER FUNCTIONS ---
+    function renderProfessionalsList() {
+        const container = document.getElementById('professionals-list-container');
+        if (!container) return;
+        
+        let tableHTML = `<table class="w-full text-sm text-left"><thead class="text-xs uppercase bg-slate-50 dark:bg-slate-700"><tr><th class="px-6 py-3">Nome</th><th class="px-6 py-3">Cargo</th><th class="px-6 py-3">Custo/Hora</th><th></th></tr></thead><tbody>`;
+        
+        if (state.data.professionals.length === 0) {
+            tableHTML += `<tr><td colspan="4" class="text-center py-10 text-slate-500">Nenhum profissional adicionado.</td></tr>`;
+        } else {
+            state.data.professionals.forEach(p => {
+                tableHTML += `<tr class="bg-white dark:bg-slate-800 border-b dark:border-slate-700">
+                    <td class="px-6 py-4 font-medium">${p.name}</td>
+                    <td class="px-6 py-4">${p.role}</td>
+                    <td class="px-6 py-4">R$ ${p.cost}</td>
+                    <td class="px-6 py-4 text-right">
+                        <button data-id="${p.id}" class="remove-prof-btn font-medium text-red-600 hover:underline">Remover</button>
+                    </td>
+                </tr>`;
+            });
+        }
+        
+        tableHTML += `</tbody></table>`;
+        container.innerHTML = tableHTML;
+    }
+
+
+    // --- EVENT LISTENERS & HANDLERS ---
+    function setupEventListeners() {
+        ui.navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                switchView(item.id.replace('nav-', ''));
+            });
+        });
+
         ui.logoutBtn.addEventListener('click', async () => {
             await supabase.auth.signOut();
-            // O listener onAuthStateChange em auth.js irá tratar do redirecionamento
+            window.location.href = 'index.html';
         });
-    }
 
-    document.getElementById('add-professional-form').addEventListener('submit', handleAddProfessional);
-    document.getElementById('professionals-list-container').addEventListener('click', handleRemoveProfessional);
-    document.getElementById('professionals-list-container').addEventListener('change', handleCostUpdate);
-    // ... (Outros event listeners)
-}
-
-// --- HANDLERS DE AÇÕES (LIGAÇÃO AO SUPABASE) ---
-async function handleAddProfessional(e) { 
-    e.preventDefault(); 
-    const name = document.getElementById('prof-name').value; 
-    const role = document.getElementById('prof-role').value; 
-    const cost = parseFloat(document.getElementById('prof-cost').value); 
-    if (!name || !role || isNaN(cost)) { showNotification('Todos os campos são obrigatórios.', 'error'); return; }
-    
-    // Agora inclui o user_id
-    const { error } = await supabase.from('professionals').insert({ name, role, cost, utilization: 0, user_id: state.user.id });
-
-    if (error) {
-        console.error("Erro ao adicionar profissional: ", error);
-        showNotification('Erro ao adicionar profissional.', 'error');
-    } else {
-        e.target.reset(); 
-        showNotification('Profissional adicionado com sucesso!');
-    }
-}
-
-async function handleRemoveProfessional(e) { 
-    if (!e.target.classList.contains('remove-prof-btn')) return; 
-    const idToRemove = e.target.dataset.id;
-    showConfirmationModal(['Tem certeza que deseja remover este profissional?'], async () => {
-        const { error } = await supabase.from('professionals').delete().eq('id', idToRemove);
-        if (error) {
-            console.error("Erro ao remover profissional: ", error);
-            showNotification('Erro ao remover profissional.', 'error');
-        } else {
-            showNotification('Profissional removido.');
+        const addProfessionalForm = document.getElementById('add-professional-form');
+        if (addProfessionalForm) {
+            addProfessionalForm.addEventListener('submit', handleAddProfessional);
         }
-    });
-}
-
-async function handleCostUpdate(e) {
-    if (!e.target.classList.contains('prof-cost-input')) return; 
-    const id = e.target.dataset.id;
-    const newCost = parseFloat(e.target.value);
-    if (isNaN(newCost)) return;
+        
+        const professionalsContainer = document.getElementById('professionals-list-container');
+        if(professionalsContainer) {
+            professionalsContainer.addEventListener('click', handleRemoveProfessional);
+        }
+    }
     
-    const { error } = await supabase.from('professionals').update({ cost: newCost }).eq('id', id);
+    async function handleAddProfessional(e) {
+        e.preventDefault();
+        const name = e.target.elements['prof-name'].value;
+        const role = e.target.elements['prof-role'].value;
+        const cost = parseFloat(e.target.elements['prof-cost'].value);
 
-    if (error) {
-        console.error("Erro ao atualizar custo: ", error);
-        showNotification('Erro ao atualizar custo.', 'error');
-    } else {
-        showNotification(`Custo atualizado.`, 'info');
+        if (!name || !role || isNaN(cost)) {
+            alert('Por favor, preencha todos os campos.');
+            return;
+        }
+
+        const { error } = await supabase.from('professionals').insert({
+            name,
+            role,
+            cost,
+            user_id: state.currentUser.id
+        });
+
+        if (error) {
+            console.error('Error adding professional:', error);
+            alert('Não foi possível adicionar o profissional.');
+        } else {
+            e.target.reset();
+        }
     }
-}
-
-async function handleAddAllocation(projectId, professionalId, date, hours, type) {
-    const { error } = await supabase.from('allocations').insert({
-        projectId,
-        professionalId,
-        date,
-        hours: parseFloat(hours),
-        type,
-        user_id: state.user.id // Inclui o user_id
-    });
-
-    if (error) {
-        console.error("Erro ao adicionar alocação: ", error);
-        showNotification('Erro ao salvar alocação.', 'error');
-    } else {
-        showNotification('Alocação salva!', 'success');
-    }
-}
-
-// ... (Todas as outras funções de handlers como handleAddComment, etc., devem ser atualizadas para incluir user_id)
-
-// --- INICIALIZAÇÃO DA APLICAÇÃO ---
-async function initApp() {
-    ui.loadingOverlay.classList.remove('hidden');
-
-    const { data: { session }, error } = await supabase.auth.getSession();
-
-    if (error) {
-        console.error("Erro ao obter sessão:", error);
-        window.location.href = 'index.html'; // Falha de segurança, volta para o login
-        return;
-    }
-
-    if (!session) {
-        console.log("Nenhuma sessão encontrada, a redirecionar para o login.");
-        window.location.href = 'index.html'; // Se não há sessão, não devia estar aqui
-        return;
-    }
-
-    state.user = session.user;
-    if (ui.userInfo) {
-        ui.userInfo.textContent = `Logado como: ${state.user.email}`;
-    }
-
-    applyTheme();
-    setupEventListeners();
-
-    // Carregar dados iniciais
-    state.data.professionals = await fetchData('professionals');
-    state.data.projects = await fetchData('projects');
-    state.data.allocations = await fetchData('allocations');
-    state.data.comments = await fetchData('comments');
-
-    // Configurar listeners de tempo real
-    setupRealtimeSubscriptions();
     
-    // Renderizar a vista inicial
-    switchView(state.currentView);
-    renderAllViews();
+    async function handleRemoveProfessional(e) {
+        if (!e.target.classList.contains('remove-prof-btn')) return;
+        
+        const professionalId = e.target.dataset.id;
+        if (confirm('Tem a certeza que quer remover este profissional?')) {
+            const { error } = await supabase.from('professionals').delete().eq('id', professionalId);
+            if(error) {
+                console.error('Error removing professional:', error);
+                alert('Não foi possível remover o profissional.');
+            }
+        }
+    }
 
-    ui.loadingOverlay.classList.add('opacity-0');
-    setTimeout(() => { ui.loadingOverlay.style.display = 'none'; }, 300);
-}
-
-// --- PONTO DE ENTRADA ---
-// Garante que o DOM está carregado antes de executar
-document.addEventListener('DOMContentLoaded', initApp);
+    // --- START THE APP ---
+    checkSession();
+});
 

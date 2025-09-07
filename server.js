@@ -27,6 +27,14 @@ app.use(cors());
 app.use(express.json());
 // Use port provided by environment (Render) or default to 3000 for local dev
 const PORT = process.env.PORT || 3000;
+// Garante que a aplicação falhe de forma descritiva caso as variáveis do
+// Supabase não estejam configuradas. Sem esses valores, o `createClient`
+// lança um erro pouco claro ("supabaseUrl is required"), interrompendo o
+// deploy no Render.
+if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+  console.error('Configure SUPABASE_URL e SUPABASE_SERVICE_KEY no ambiente.');
+  process.exit(1);
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 

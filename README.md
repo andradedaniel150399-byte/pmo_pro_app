@@ -29,6 +29,21 @@ Suba este repositório único no Render como **Web Service**. Frontend e backend
 2. Cadastre `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_ANON_KEY`, `PIPEFY_TOKEN`, `PIPEFY_PIPE_IDS`, `PIPEFY_STATUS_FIELD` e `PIPEFY_OWNER_EMAIL_FIELD` com os mesmos valores do `.env` local.
 3. Salve e reinicie o serviço para aplicar.
 
+## Banco de dados (Supabase)
+
+O arquivo [`supabase-schema.sql`](./supabase-schema.sql) contém as tabelas e views usadas pela aplicação:
+`projects`, `professionals`, `allocations` e `allocations_view`.
+
+### Executar pelo dashboard
+1. Acesse o projeto no [app.supabase.com](https://app.supabase.com/).
+2. Abra **SQL Editor → New query**.
+3. Copie o conteúdo de `supabase-schema.sql` e clique em **Run**.
+
+### Executar via CLI
+1. Instale o [Supabase CLI](https://supabase.com/docs/guides/cli) e faça login (`supabase login`).
+2. Vincule seu projeto: `supabase link --project-ref <REF_DO_PROJETO>`.
+3. Rode o script: `supabase db query supabase-schema.sql`.
+
 ## Deploy
 1. GitHub → New repo → Upload files (tudo desta pasta).
 2. Render → New → Web Service → Build from repo

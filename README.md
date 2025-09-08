@@ -11,6 +11,8 @@ Suba este repositório único no Render como **Web Service**. Frontend e backend
    - `SUPABASE_SERVICE_KEY` → **service_role**
    - `SUPABASE_ANON_KEY` → **anon public**
 
+> Sem `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` e `SUPABASE_ANON_KEY`, o servidor não inicia.
+
 ### Pipefy
 
 - `PIPEFY_TOKEN`: token de API disponível em <https://app.pipefy.com/profile/developers>.

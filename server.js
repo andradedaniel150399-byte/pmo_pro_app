@@ -36,6 +36,11 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   process.exit(1);
 }
 
+if (!SUPABASE_ANON_KEY) {
+  console.error('Configure SUPABASE_ANON_KEY no ambiente.');
+  process.exit(1);
+}
+
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 // Expor variáveis públicas para o frontend

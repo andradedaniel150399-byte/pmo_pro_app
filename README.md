@@ -1,6 +1,11 @@
 # PMO Pro — Unified (zero edição)
 Suba este repositório único no Render como **Web Service**. Frontend e backend já estão juntos e configurados.
 
+## Requisitos
+
+- Node.js 18 ou superior é obrigatório, tanto localmente quanto no Render.
+  - Instale com [nvm](https://github.com/nvm-sh/nvm): `nvm install 18` e `nvm use 18`
+
 ## Variáveis de ambiente
 
 ### Supabase
@@ -22,6 +27,7 @@ Suba este repositório único no Render como **Web Service**. Frontend e backend
 
 1. Copie `.env.example` para `.env` e preencha com os valores obtidos.
 2. O arquivo `.env` está listado no `.gitignore` para evitar commits acidentais.
+3. Use Node.js 18+ antes de rodar o servidor (ex.: `nvm use 18`).
 
 ### Configuração no Render
 
@@ -32,6 +38,7 @@ Suba este repositório único no Render como **Web Service**. Frontend e backend
 ## Deploy
 1. GitHub → New repo → Upload files (tudo desta pasta).
 2. Render → New → Web Service → Build from repo
+   - Runtime: Node 18
    - Build: `npm install`
    - Start: `node server.js`
    - Defina as variáveis de ambiente acima em **Environment**.

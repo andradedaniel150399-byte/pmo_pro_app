@@ -6,6 +6,7 @@
   <title>PMO Pro • Dashboard</title>
   <!-- Tailwind CDN (ok para prototipagem) -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
@@ -111,7 +112,19 @@
     </section>
   </main>
 
+  <div id="notification-container"></div>
+  <div id="confirmation-modal" class="hidden">
+    <div class="modal-box">
+      <p id="confirmation-message"></p>
+      <div class="modal-actions">
+        <button id="confirm-yes" class="btn btn-primary">Confirmar</button>
+        <button id="confirm-no" class="btn btn-soft">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Seu JS do dashboard -->
+  <script src="./ui.js" defer></script>
   <script src="./dashboard.js" defer></script>
 </body>
 </html>

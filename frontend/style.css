@@ -26,4 +26,4 @@
 .kanban-column { @apply bg-slate-100 rounded-xl p-3 min-w-[250px] flex-1; }
 .kanban-column-title { @apply font-semibold mb-3 text-sm; }
 .kanban-column-cards { @apply flex flex-col gap-3; }
-.kanban-card { @apply bg-white rounded-xl p-3 shadow cursor-move; }
+.kanban-card { @apply bg-white rounded-xl p-3 shadow cursor-move border-l-4; }

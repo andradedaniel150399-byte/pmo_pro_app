@@ -65,3 +65,7 @@ Rotas:
 - /api → health
 - /api/inspect/fields?pipeId=<ID>
 - /api/sync/pipefy (POST)
+
+### Frontend
+
+O `dashboard.js` agora centraliza os botões de sincronização e logout. A função `handleLogout` está disponível em `ui.js` para que qualquer página possa encerrar a sessão.

@@ -151,7 +151,6 @@ function handleLogout() {
 // --- eventos ---
 document.getElementById('btnAddProf')?.addEventListener('click', addProfessional);
 document.getElementById('btnLogin')?.addEventListener('click', handleLogin);
-document.getElementById('btnLogout')?.addEventListener('click', handleLogout);
 document.getElementById('btnPersonalize')?.addEventListener('click', () => {
   location.href = '/settings.html';
 });
@@ -159,9 +158,6 @@ document.getElementById('btnTheme')?.addEventListener('click', () => {
   const html = document.documentElement;
   html.classList.toggle('dark');
   localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
-});
-document.getElementById('btnSync')?.addEventListener('click', () => {
-  location.href = '/dashboard.html';
 });
 
 // carrega listas e estado ao abrir

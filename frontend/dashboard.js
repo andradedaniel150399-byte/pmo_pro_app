@@ -183,29 +183,37 @@
     const btnLogout = $('#btnLogout');
 
     on(btnSync, 'click', () => {
-      confirmAction('Sincronizar Pipefy → Projetos?', async () => {
-        try {
-          setLoading(btnSync, true);
-          const r = await fetchJSON('/api/sync/pipefy', { method: 'POST', cache: 'miss' });
-          showNotification(`Sincronizado: ${r.upserts ?? 0} projeto(s)`, 'success');
-          // limpar cache de métricas para refletir sincronização
-          sessionStorage.clear();
-          await refreshAll();
-          // se a página principal tem window.loadProjects, recarrega lista
-          if (typeof window.loadProjects === 'function') await window.loadProjects();
-        } catch (e) {
-          showNotification(`Erro ao sincronizar: ${e.message}`, 'error');
-        } finally {
-          setLoading(btnSync, false);
-        }
-      });
+      if (location.pathname.endsWith('/dashboard.html')) {
+        confirmAction('Sincronizar Pipefy → Projetos?', async () => {
+          try {
+            setLoading(btnSync, true);
+            const r = await fetchJSON('/api/sync/pipefy', { method: 'POST', cache: 'miss' });
+            showNotification(`Sincronizado: ${r.upserts ?? 0} projeto(s)`, 'success');
+            // limpar cache de métricas para refletir sincronização
+            sessionStorage.clear();
+            await refreshAll();
+            // se a página principal tem window.loadProjects, recarrega lista
+            if (typeof window.loadProjects === 'function') await window.loadProjects();
+          } catch (e) {
+            showNotification(`Erro ao sincronizar: ${e.message}`, 'error');
+          } finally {
+            setLoading(btnSync, false);
+          }
+        });
+      } else {
+        location.href = '/dashboard.html';
+      }
     });
 
     on(btnLogout, 'click', () => {
       confirmAction('Deseja sair?', () => {
-        // Caso você use Supabase Auth no front, adicione o signOut aqui.
-        localStorage.removeItem('demoUser');
-        location.href = '/';
+        if (typeof handleLogout === 'function') {
+          handleLogout();
+        } else {
+          // Caso você use Supabase Auth no front, adicione o signOut aqui.
+          localStorage.removeItem('demoUser');
+          location.href = '/';
+        }
       });
     });
   }

@@ -25,6 +25,10 @@ Suba este repositório único no Render como **Web Service**. Frontend e backend
 - `PIPEFY_STATUS_FIELD`: nome ou ID do campo de status usado nos cards.
 - `PIPEFY_OWNER_EMAIL_FIELD`: nome ou ID do campo que armazena o e-mail do responsável.
 
+### Gemini
+
+- `GEMINI_API_KEY`: chave da API do Google AI Studio para gerar previsões.
+
 ### Arquivo `.env` local
 
 1. Copie `.env.example` para `.env` e preencha com os valores obtidos.
@@ -65,3 +69,4 @@ Rotas:
 - /api → health
 - /api/inspect/fields?pipeId=<ID>
 - /api/sync/pipefy (POST)
+- /api/gemini (POST)

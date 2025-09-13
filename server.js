@@ -21,6 +21,7 @@ const PIPEFY_TOKEN = process.env.PIPEFY_TOKEN;
 const PIPEFY_PIPE_IDS = (process.env.PIPEFY_PIPE_IDS || '').split(',').filter(Boolean);
 const PIPEFY_STATUS_FIELD = process.env.PIPEFY_STATUS_FIELD || '';
 const PIPEFY_OWNER_EMAIL_FIELD = process.env.PIPEFY_OWNER_EMAIL_FIELD || '';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const app = express();
 app.use(cors());
@@ -61,6 +62,45 @@ app.get('/', (_req, res) => res.sendFile(path.join(FRONT_DIR, 'index.html')));
 
 // Health
 app.get('/api', (_req, res) => res.json({ ok: true, service: 'PMO Pro API' }));
+
+// ===== Gemini proxy =====
+app.post('/api/gemini', async (req, res) => {
+  try {
+    if (!GEMINI_API_KEY) {
+      return res.status(500).json({ error: 'Configure GEMINI_API_KEY' });
+    }
+    const { prompt, schema } = req.body || {};
+    if (!prompt) {
+      return res.status(400).json({ error: 'Missing prompt' });
+    }
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
+    const body = {
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { responseMimeType: 'application/json' }
+    };
+    if (schema) body.generationConfig.responseSchema = schema;
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const json = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      throw new Error(json.error?.message || `Gemini request failed ${r.status}`);
+    }
+    let payload = {};
+    try {
+      const text = json.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+      payload = JSON.parse(text);
+    } catch (parseErr) {
+      console.error('[gemini] parse', parseErr);
+    }
+    res.json(payload);
+  } catch (e) {
+    console.error('[gemini]', e);
+    res.status(500).json({ error: String(e.message || e) });
+  }
+});
 
 // ===== Pipefy: inspecionar campos =====
 app.get('/api/inspect/fields', async (req, res) => {

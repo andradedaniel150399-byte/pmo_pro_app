@@ -124,11 +124,11 @@
       });
     }
 
-    menu.innerHTML = '<h3 class="font-semibold mb-2">Widgets</h3>';
-    state.dashboardLayout.forEach(w => {
-      const meta = WIDGETS[w.id];
-      const row = document.createElement('div');
-      row.className = 'flex items-center justify-between';
+  menu.innerHTML = '<h3 class="font-semibold mb-2">Widgets</h3>';
+  state.dashboardLayout.forEach(w => {
+    const meta = WIDGETS[w.id];
+    const row = document.createElement('div');
+    row.className = 'flex items-center justify-between';
       row.innerHTML = `
         <label class="flex items-center gap-2">
           <input type="checkbox" data-id="${w.id}" ${w.enabled ? 'checked' : ''}/>
@@ -138,19 +138,59 @@
           <button class="size-btn px-2 py-1 rounded text-xs ${w.size === 'sm' ? 'bg-indigo-600 text-white' : 'bg-gray-200'}" data-id="${w.id}" data-size="sm">Pequeno</button>
           <button class="size-btn px-2 py-1 rounded text-xs ${w.size === 'lg' ? 'bg-indigo-600 text-white' : 'bg-gray-200'}" data-id="${w.id}" data-size="lg">Grande</button>
         </span>`;
-      menu.appendChild(row);
+    menu.appendChild(row);
+  });
+  }
+
+  async function fetchJSON(path, opts = {}) {
+    const res = await fetch(path, { headers: { 'Content-Type': 'application/json' }, ...opts });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }
+
+  function setKpi(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = (val ?? 0).toLocaleString('pt-BR');
+  }
+
+  async function loadOverview() {
+    const data = await fetchJSON('/api/metrics/overview');
+    setKpi('kpi-total', data.total_projects);
+    setKpi('kpi-last30', data.projects_last_30d);
+    setKpi('kpi-owners', data.owners);
+    setKpi('kpi-hours', data.total_hours);
+    return data;
+  }
+
+  async function loadTopProjects() {
+    const tbody = document.getElementById('top-projects-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const j = await fetchJSON('/api/metrics/top-projects?limit=10');
+    (j.items || []).forEach(p => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="py-2 pr-4">${p.name ?? '-'}</td>
+        <td class="py-2 pr-4">${p.status ?? '-'}</td>
+        <td class="py-2 pr-4">${p.owner_email ?? '-'}</td>
+        <td class="py-2 text-right">${(p.hours ?? 0).toLocaleString('pt-BR')}</td>`;
+      tbody.appendChild(tr);
     });
   }
 
   async function renderRevenueStatusChart(root) {
     await ensureChartJs();
+    const overview = await loadOverview();
+    const labels = Object.keys(overview.by_status || {});
+    const values = labels.map(k => overview.by_status[k]);
+    const colors = ['#c7d2fe', '#4f46e5', '#a5b4fc', '#818cf8', '#6366f1'];
     const canvas = document.createElement('canvas');
     root.appendChild(canvas);
     new Chart(canvas, {
       type: 'doughnut',
       data: {
-        labels: ['Planejado', 'Realizado'],
-        datasets: [{ data: [60, 40], backgroundColor: ['#c7d2fe', '#4f46e5'] }]
+        labels,
+        datasets: [{ data: values, backgroundColor: colors.slice(0, labels.length) }]
       },
       options: { plugins: { legend: { position: 'bottom' } } }
     });
@@ -158,19 +198,20 @@
 
   async function renderUtilizationChart(root) {
     await ensureChartJs();
+    const series = await fetchJSON('/api/metrics/timeseries?days=30');
     const canvas = document.createElement('canvas');
     root.appendChild(canvas);
     new Chart(canvas, {
       type: 'bar',
       data: {
-        labels: ['Jan', 'Fev', 'Mar', 'Abr'],
+        labels: series.labels || [],
         datasets: [{
-          label: 'Utilização (%)',
-          data: [75, 82, 68, 90],
+          label: 'Novos projetos',
+          data: series.values || [],
           backgroundColor: '#4f46e5'
         }]
       },
-      options: { scales: { y: { beginAtZero: true, max: 100 } } }
+      options: { scales: { y: { beginAtZero: true } } }
     });
   }
 
@@ -199,6 +240,7 @@
   function init() {
     renderDashboard();
     renderCustomizeMenu();
+    loadTopProjects();
   }
 
   if (document.readyState === 'loading') {

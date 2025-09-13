@@ -40,5 +40,14 @@ function confirmAction(message, onConfirm, onCancel) {
   noBtn.addEventListener('click', noHandler);
 }
 
+function handleLogout() {
+  localStorage.removeItem('demoUser');
+  showNotification('Até logo!', 'info');
+  if (typeof currentUser !== 'undefined') currentUser = null;
+  if (typeof updateUserUI === 'function') updateUserUI();
+  location.href = '/';
+}
+
 window.showNotification = showNotification;
 window.confirmAction = confirmAction;
+window.handleLogout = handleLogout;

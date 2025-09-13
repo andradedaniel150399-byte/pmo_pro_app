@@ -224,6 +224,31 @@ app.get('/api/metrics/top-projects', async (req, res) => {
   }
 });
 
+// ===== Projects (for Kanban board) =====
+app.get('/api/projects', async (_req, res) => {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(500);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+app.patch('/api/projects/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body || {};
+  if (!status) return res.status(400).json({ error: 'status obrigatório' });
+  const { data, error } = await supabase
+    .from('projects')
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
 // ===== CRUD já existentes =====
 app.get('/api/professionals', async (_req, res) => {
   const { data, error } = await supabase

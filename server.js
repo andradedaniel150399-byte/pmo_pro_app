@@ -225,30 +225,7 @@ app.get('/api/metrics/top-projects', async (req, res) => {
   }
 });
 
-app.post('/api/gemini', async (req, res) => {
-  try {
-    const prompt = req.body?.prompt || '';
-    if (!prompt) return res.status(400).json({ error: 'prompt obrigatório' });
-    if (!GEMINI_API_KEY) {
-      return res.status(500).json({ error: 'Configure GEMINI_API_KEY' });
-    }
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
-    const r = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-    const data = await r.json().catch(() => ({}));
-    if (!r.ok) {
-      const msg = data?.error?.message || `Gemini request failed ${r.status}`;
-      throw new Error(msg);
-    }
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    res.json({ text });
-  } catch (e) {
-    console.error('[gemini]', e);
-    res.status(500).json({ error: String(e.message || e) });
-  }
+main
 });
 
 // ===== CRUD já existentes =====
@@ -308,6 +285,16 @@ app.post('/api/allocations', async (req, res) => {
     .single();
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
+});
+
+app.post('/api/allocations/cleanup', async (req, res) => {
+  try {
+    const { month, professional_id, project_id } = req.body || {};
+main
+  } catch (e) {
+    console.error('[allocations/cleanup]', e);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ===== Helpers do Pipefy (sem createdAt/updatedAt do schema) =====

@@ -78,12 +78,16 @@ async function handlePipefySync() {
 }
 window.handlePipefySync = handlePipefySync;
 
-document.getElementById('btnSaveSync').addEventListener('click', async () => {
-  saveIntegration();
-  await handlePipefySync();
-});
+document.addEventListener('DOMContentLoaded', () => {
+  initTabs();
+  loadTeam();
+  loadIntegration();
 
-// Inicialização
-initTabs();
-loadTeam();
-loadIntegration();
+  const btnSaveSync = document.getElementById('btnSaveSync');
+  if (btnSaveSync) {
+    btnSaveSync.addEventListener('click', async () => {
+      saveIntegration();
+      await handlePipefySync();
+    });
+  }
+});

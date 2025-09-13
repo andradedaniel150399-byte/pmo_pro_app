@@ -283,6 +283,29 @@ app.post('/api/allocations', async (req, res) => {
   res.json(data);
 });
 
+app.post('/api/allocations/cleanup', async (req, res) => {
+  try {
+    const { month, professional_id, project_id } = req.body || {};
+
+    let query = supabase.from('allocations').delete();
+    if (professional_id) query = query.eq('professional_id', professional_id);
+    if (project_id) query = query.eq('project_id', project_id);
+    if (month) {
+      const [y, m] = month.split('-').map(Number);
+      const start = new Date(y, m - 1, 1).toISOString().slice(0, 10);
+      const end = new Date(y, m, 0).toISOString().slice(0, 10);
+      query = query.gte('start_date', start).lte('start_date', end);
+    }
+
+    const { data, error } = await query.select('id');
+    if (error) throw error;
+    res.json({ ok: true, deleted: (data || []).length });
+  } catch (e) {
+    console.error('[allocations/cleanup]', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ===== Helpers do Pipefy (sem createdAt/updatedAt do schema) =====
 async function fetchPipeProjects(pipeId) {
   const url = 'https://api.pipefy.com/graphql';

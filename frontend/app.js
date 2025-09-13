@@ -1,3 +1,34 @@
+// Estado global simples da aplicação
+const state = {
+  theme: localStorage.getItem('theme') || 'light',
+  user: null,
+  data: {
+    projects: [],
+    professionals: [],
+    allocations: []
+  }
+};
+
+// Alterna visualizações principais (tabs)
+function switchView(viewId) {
+  document.querySelectorAll('.tab-panel').forEach(sec => {
+    const active = sec.id === viewId;
+    sec.classList.toggle('hidden', !active);
+    sec.classList.toggle('block', active);
+  });
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === viewId);
+  });
+}
+
+// Aplica tema salvo em localStorage
+function applyTheme() {
+  state.theme = localStorage.getItem('theme') || 'light';
+  const isDark = state.theme === 'dark';
+  document.documentElement.classList.toggle('dark', isDark);
+  document.body.classList.toggle('dark', isDark);
+}
+
 // Carrega lista de projetos (aba Projetos) e preenche selects usados nas alocações
 async function loadProjects() {
   try {
@@ -89,13 +120,6 @@ async function addProfessional() {
     alert('Erro: ' + e.message);
   }
 }
-
-// eventos
-document.getElementById('btnAddProf')?.addEventListener('click', addProfessional);
-
-// carrega listas ao abrir
-loadProjects();
-loadProfessionals();
 
 // expõe para o dashboard.js poder recarregar junto após sync
 window.loadProjects = loadProjects;

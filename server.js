@@ -21,6 +21,7 @@ const PIPEFY_TOKEN = process.env.PIPEFY_TOKEN;
 const PIPEFY_PIPE_IDS = (process.env.PIPEFY_PIPE_IDS || '').split(',').filter(Boolean);
 const PIPEFY_STATUS_FIELD = process.env.PIPEFY_STATUS_FIELD || '';
 const PIPEFY_OWNER_EMAIL_FIELD = process.env.PIPEFY_OWNER_EMAIL_FIELD || '';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const app = express();
 app.use(cors());
@@ -281,6 +282,32 @@ app.post('/api/allocations', async (req, res) => {
     .single();
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
+});
+
+app.post('/api/allocations/cleanup', async (req, res) => {
+  try {
+    const { month, professional_id, project_id } = req.body || {};
+
+    let query = supabase.from('allocations').delete();
+
+    if (month) {
+      const start = `${month}-01`;
+      const endDate = new Date(start);
+      endDate.setMonth(endDate.getMonth() + 1);
+      const end = endDate.toISOString().slice(0, 10);
+      query = query.gte('start_date', start).lt('start_date', end);
+    }
+    if (professional_id) query = query.eq('professional_id', professional_id);
+    if (project_id) query = query.eq('project_id', project_id);
+
+    const { data, error } = await query.select('id');
+    if (error) throw error;
+
+    res.json({ ok: true, deleted: data.length });
+  } catch (e) {
+    console.error('[allocations/cleanup]', e);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ===== Helpers do Pipefy (sem createdAt/updatedAt do schema) =====

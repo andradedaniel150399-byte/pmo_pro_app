@@ -78,6 +78,31 @@
         </div>
       </section>
 
+      <!-- Profitability -->
+      <section id="dashboard-profitability" class="mb-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="card">
+            <div class="card-title">Lucro por Projeto</div>
+            <canvas id="profitabilityChart" height="120"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title">Tabela de Lucro</div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead><tr class="text-left">
+                  <th class="py-2 pr-4">Projeto</th>
+                  <th class="py-2 pr-4 text-right">Receita</th>
+                  <th class="py-2 pr-4 text-right">Custo</th>
+                  <th class="py-2 pr-4 text-right">Lucro</th>
+                  <th class="py-2 text-right">Margem</th>
+                </tr></thead>
+                <tbody id="profitabilityTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Tabela -->
       <section id="dashboard-top-projects">
         <div class="card">
@@ -206,6 +231,7 @@
   <script src="/app.js" defer></script>
   <script src="/allocations.js" defer></script>
   <script src="/dashboard.js" defer></script>
+  <script src="/profitability.js" defer></script>
   <script src="/kanban.js" defer></script>
   <script src="/portfolio.js" defer></script>
 </body>

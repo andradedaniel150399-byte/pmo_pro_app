@@ -21,6 +21,7 @@ const PIPEFY_TOKEN = process.env.PIPEFY_TOKEN;
 const PIPEFY_PIPE_IDS = (process.env.PIPEFY_PIPE_IDS || '').split(',').filter(Boolean);
 const PIPEFY_STATUS_FIELD = process.env.PIPEFY_STATUS_FIELD || '';
 const PIPEFY_OWNER_EMAIL_FIELD = process.env.PIPEFY_OWNER_EMAIL_FIELD || '';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const app = express();
 app.use(cors());
@@ -224,29 +225,7 @@ app.get('/api/metrics/top-projects', async (req, res) => {
   }
 });
 
-// ===== Projects (for Kanban board) =====
-app.get('/api/projects', async (_req, res) => {
-  const { data, error } = await supabase
-    .from('projects')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(500);
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
-});
-
-app.patch('/api/projects/:id', async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body || {};
-  if (!status) return res.status(400).json({ error: 'status obrigatório' });
-  const { data, error } = await supabase
-    .from('projects')
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .select('*')
-    .single();
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+main
 });
 
 // ===== CRUD já existentes =====

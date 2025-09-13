@@ -33,6 +33,7 @@
         <button data-tab="tab-kanban" class="tab-btn">Kanban</button>
         <button data-tab="tab-professionals" class="tab-btn">Profissionais</button>
         <button data-tab="tab-allocations" class="tab-btn">Alocações</button>
+        <button data-tab="tab-capacity" class="tab-btn">Capacidade</button>
       </nav>
     </div>
 
@@ -211,6 +212,17 @@
         </div>
       </div>
     </section>
+    <!-- CAPACIDADE -->
+    <section id="tab-capacity" class="tab-panel hidden">
+      <div class="card">
+        <div class="card-title">Capacidade vs Demanda</div>
+        <canvas id="capacityGapChart" height="120"></canvas>
+        <div class="mt-4">
+          <button id="btnAnalyzeRisks" class="btn-primary">Analisar Riscos</button>
+          <p id="riskAnalysisText" class="mt-2 text-sm text-slate-700 whitespace-pre-line"></p>
+        </div>
+      </div>
+    </section>
   </main>
 
   <div id="notification-container"></div>
@@ -232,7 +244,6 @@
   <script src="/allocations.js" defer></script>
   <script src="/dashboard.js" defer></script>
   <script src="/profitability.js" defer></script>
-  <script src="/kanban.js" defer></script>
-  <script src="/portfolio.js" defer></script>
+  <script src="/kanban.js" defer></script> main
 </body>
 </html>

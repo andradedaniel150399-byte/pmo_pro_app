@@ -90,6 +90,33 @@
       </div>
     </section>
 
+    <!-- Profitability -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="card p-4">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="font-semibold text-gray-900">Lucro por projeto</h2>
+        </div>
+        <canvas id="profitabilityChart" height="160"></canvas>
+      </div>
+      <div class="card p-4 overflow-x-auto">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="font-semibold text-gray-900">Tabela de lucro</h2>
+        </div>
+        <table class="min-w-full text-sm">
+          <thead class="text-left text-gray-500 border-b">
+            <tr>
+              <th class="py-2 pr-4">Projeto</th>
+              <th class="py-2 pr-4 text-right">Receita</th>
+              <th class="py-2 pr-4 text-right">Custo</th>
+              <th class="py-2 pr-4 text-right">Lucro</th>
+              <th class="py-2 text-right">Margem</th>
+            </tr>
+          </thead>
+          <tbody id="profitabilityTable" class="divide-y"></tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- Lista Top Projetos -->
     <section class="card p-4">
       <div class="flex items-center justify-between mb-3">
@@ -126,5 +153,6 @@
   <!-- Seu JS do dashboard -->
   <script src="./ui.js" defer></script>
   <script src="./dashboard.js" defer></script>
+  <script src="./profitability.js" defer></script>
 </body>
 </html>

@@ -123,3 +123,22 @@ async function addProfessional() {
 
 // expõe para o dashboard.js poder recarregar junto após sync
 window.loadProjects = loadProjects;
+
+// Navegação por hash para permitir links diretos para abas
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.tab;
+      switchView(view);
+      location.hash = view;
+    });
+  });
+
+  window.addEventListener('hashchange', () => {
+    const view = location.hash.slice(1);
+    if (view) switchView(view);
+  });
+
+  const initial = location.hash.slice(1) || 'tab-dashboard';
+  switchView(initial);
+});

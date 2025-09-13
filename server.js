@@ -225,9 +225,6 @@ app.get('/api/metrics/top-projects', async (req, res) => {
   }
 });
 
-main
-});
-
 // ===== CRUD já existentes =====
 app.get('/api/professionals', async (_req, res) => {
   const { data, error } = await supabase

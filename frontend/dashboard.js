@@ -204,6 +204,7 @@
     on(btnLogout, 'click', () => {
       confirmAction('Deseja sair?', () => {
         // Caso você use Supabase Auth no front, adicione o signOut aqui.
+        localStorage.removeItem('demoUser');
         location.href = '/';
       });
     });

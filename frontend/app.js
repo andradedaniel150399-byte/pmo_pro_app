@@ -121,19 +121,5 @@ async function addProfessional() {
   }
 }
 
-// Inicializa a aplicação
-function init() {
-  applyTheme();
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => switchView(btn.dataset.tab));
-  });
-  document.getElementById('btnAddProf')?.addEventListener('click', addProfessional);
-
-  loadProjects();
-  loadProfessionals();
-}
-
-document.addEventListener('DOMContentLoaded', init);
-
 // expõe para o dashboard.js poder recarregar junto após sync
 window.loadProjects = loadProjects;

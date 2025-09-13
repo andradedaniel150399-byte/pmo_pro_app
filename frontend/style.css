@@ -27,3 +27,14 @@
 .kanban-column-title { @apply font-semibold mb-3 text-sm; }
 .kanban-column-cards { @apply flex flex-col gap-3; }
 .kanban-card { @apply bg-white rounded-xl p-3 shadow cursor-move; }
+/* Notifications */
+#notification-container { @apply fixed top-4 right-4 z-50 flex flex-col gap-2; }
+.notification { @apply px-4 py-2 rounded-xl shadow text-white text-sm; }
+.notification-info { @apply bg-slate-800; }
+.notification-success { @apply bg-green-600; }
+.notification-error { @apply bg-red-600; }
+
+/* Confirmation modal */
+#confirmation-modal { @apply fixed inset-0 bg-black/50 flex items-center justify-center hidden z-50; }
+#confirmation-modal .modal-box { @apply bg-white rounded-xl p-6 max-w-sm w-full text-center; }
+#confirmation-modal .modal-actions { @apply mt-4 flex justify-center gap-3; }

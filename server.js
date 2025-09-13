@@ -286,29 +286,7 @@ app.post('/api/allocations', async (req, res) => {
 app.post('/api/allocations/cleanup', async (req, res) => {
   try {
     const { month, professional_id, project_id } = req.body || {};
-    if (!month && !professional_id && !project_id) {
-      return res.status(400).json({ error: 'Informe ao menos um filtro' });
-    }
-
-    let query = supabase.from('allocations').delete();
-
-    if (month) {
-      const start = new Date(`${month}-01`);
-      if (!isNaN(start)) {
-        const end = new Date(start);
-        end.setMonth(end.getMonth() + 1);
-        query = query
-          .gte('start_date', start.toISOString())
-          .lt('start_date', end.toISOString());
-      }
-    }
-
-    if (professional_id) query = query.eq('professional_id', professional_id);
-    if (project_id) query = query.eq('project_id', project_id);
-
-    const { data, error } = await query.select('id');
-    if (error) throw error;
-    res.json({ ok: true, deleted: data.length });
+main
   } catch (e) {
     console.error('[allocations/cleanup]', e);
     res.status(500).json({ error: e.message });

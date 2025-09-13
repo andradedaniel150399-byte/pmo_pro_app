@@ -140,14 +140,6 @@ function handleLogin() {
   updateUserUI();
 }
 
-function handleLogout() {
-  localStorage.removeItem('demoUser');
-  showNotification('Até logo!', 'info');
-  currentUser = null;
-  updateUserUI();
-  location.href = '/';
-}
-
 // --- eventos ---
 document.getElementById('btnAddProf')?.addEventListener('click', addProfessional);
 document.getElementById('btnLogin')?.addEventListener('click', handleLogin);

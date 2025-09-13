@@ -64,10 +64,16 @@ async function loadKanban() {
   }
 }
 
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function renderComments(projectId) {
   return (state.db.comments || [])
     .filter(c => String(c.project_id) === String(projectId))
-    .map(c => `<div class="p-2 bg-slate-100 rounded">${c.text}</div>`)
+    .map(c => `<div class="p-2 bg-slate-100 rounded">${escapeHtml(c.text)}</div>`)
     .join('');
 }
 

@@ -69,13 +69,20 @@
   }
 
   async function callGeminiAPI(prompt) {
-    const res = await fetch('/api/gemini', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
-    });
+    let res;
+    try {
+      res = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+    } catch (e) {
+      throw new Error('Erro de rede ao acessar Gemini API');
+    }
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'Falha na Gemini API');
+    if (!res.ok || data.error) {
+      throw new Error(data.error || data.message || 'Falha na Gemini API');
+    }
     return data.text || data.response || '';
   }
 

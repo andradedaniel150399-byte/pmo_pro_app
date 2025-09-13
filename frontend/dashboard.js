@@ -12,8 +12,7 @@
       render: renderUtilizationChart
     }
   };
-
-  const STORAGE_KEY = 'pmo:dashboardLayout';
+main
 
   const state = {
     dashboardLayout: loadLayout(),
@@ -123,6 +122,7 @@
         }
       });
     }
+main
 
   menu.innerHTML = '<h3 class="font-semibold mb-2">Widgets</h3>';
   state.dashboardLayout.forEach(w => {

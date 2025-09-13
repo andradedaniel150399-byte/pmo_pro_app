@@ -26,7 +26,7 @@ create table if not exists allocations (
   id bigserial primary key,
   project_id bigint not null references projects(id) on delete cascade,
   professional_id bigint not null references professionals(id) on delete cascade,
-  hours numeric,
+  hours double precision,
   start_date date,
   end_date date,
   created_at timestamptz default now()

@@ -21,6 +21,7 @@ const PIPEFY_TOKEN = process.env.PIPEFY_TOKEN;
 const PIPEFY_PIPE_IDS = (process.env.PIPEFY_PIPE_IDS || '').split(',').filter(Boolean);
 const PIPEFY_STATUS_FIELD = process.env.PIPEFY_STATUS_FIELD || '';
 const PIPEFY_OWNER_EMAIL_FIELD = process.env.PIPEFY_OWNER_EMAIL_FIELD || '';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const app = express();
 app.use(cors());
@@ -224,6 +225,9 @@ app.get('/api/metrics/top-projects', async (req, res) => {
   }
 });
 
+main
+});
+
 // ===== CRUD já existentes =====
 app.get('/api/professionals', async (_req, res) => {
   const { data, error } = await supabase
@@ -281,6 +285,16 @@ app.post('/api/allocations', async (req, res) => {
     .single();
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
+});
+
+app.post('/api/allocations/cleanup', async (req, res) => {
+  try {
+    const { month, professional_id, project_id } = req.body || {};
+main
+  } catch (e) {
+    console.error('[allocations/cleanup]', e);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ===== Helpers do Pipefy (sem createdAt/updatedAt do schema) =====

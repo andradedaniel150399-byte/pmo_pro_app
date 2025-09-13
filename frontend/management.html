@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PMO Pro • Gestão</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <header class="max-w-6xl mx-auto px-4 py-6 flex items-center justify-between">
+    <h1 class="text-2xl font-bold">Gestão</h1>
+    <a href="/app.html" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-sm">Voltar</a>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 pb-24">
+    <nav class="flex gap-2 mb-6">
+      <button data-tab="tab-batch" class="mgmt-tab-btn tab-btn active">Alocação em Lote</button>
+      <button data-tab="tab-cleanup" class="mgmt-tab-btn tab-btn">Limpeza</button>
+    </nav>
+
+    <section id="tab-batch" class="mgmt-tab-panel block">
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-4">
+        <select id="batch-professional" class="input"></select>
+        <input id="batch-start" type="date" class="input" />
+        <input id="batch-end" type="date" class="input" />
+        <input id="batch-hours" type="number" class="input" placeholder="h/dia" />
+        <select id="batch-projects" class="input" multiple></select>
+      </div>
+      <p id="batch-warning" class="text-sm text-red-600 hidden mb-3"></p>
+      <button id="batch-submit" class="btn-primary">Alocar</button>
+    </section>
+
+    <section id="tab-cleanup" class="mgmt-tab-panel hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-3 mb-4">
+        <input id="clean-month" type="month" class="input" />
+        <select id="clean-professional" class="input"></select>
+        <select id="clean-project" class="input"></select>
+        <button id="clean-submit" class="btn-primary">Limpar</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="/management.js" defer></script>
+</body>
+</html>

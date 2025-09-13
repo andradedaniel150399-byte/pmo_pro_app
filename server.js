@@ -287,7 +287,23 @@ app.post('/api/allocations', async (req, res) => {
 app.post('/api/allocations/cleanup', async (req, res) => {
   try {
     const { month, professional_id, project_id } = req.body || {};
-main
+
+    let query = supabase.from('allocations').delete();
+
+    if (month) {
+      const start = `${month}-01`;
+      const endDate = new Date(start);
+      endDate.setMonth(endDate.getMonth() + 1);
+      const end = endDate.toISOString().slice(0, 10);
+      query = query.gte('start_date', start).lt('start_date', end);
+    }
+    if (professional_id) query = query.eq('professional_id', professional_id);
+    if (project_id) query = query.eq('project_id', project_id);
+
+    const { data, error } = await query.select('id');
+    if (error) throw error;
+
+    res.json({ ok: true, deleted: data.length });
   } catch (e) {
     console.error('[allocations/cleanup]', e);
     res.status(500).json({ error: e.message });

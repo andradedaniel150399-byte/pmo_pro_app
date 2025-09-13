@@ -69,4 +69,3 @@ if (document.readyState !== 'loading') {
   document.addEventListener('DOMContentLoaded', renderGanttChart);
 }
 
-export { renderGanttChart };

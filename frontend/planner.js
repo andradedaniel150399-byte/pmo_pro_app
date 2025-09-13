@@ -28,7 +28,7 @@ function renderPlannerView() {
   table.appendChild(thead);
 
   const tbody = document.createElement('tbody');
-  const allocations = state?.db?.allocations || [];
+  const allocations = globalThis.state?.db?.allocations || [];
   const professionals = {};
 
   allocations.forEach(a => {

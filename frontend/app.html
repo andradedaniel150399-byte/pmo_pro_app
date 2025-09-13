@@ -15,6 +15,10 @@
   <header class="max-w-6xl mx-auto px-4 py-6 flex items-center justify-between">
     <h1 class="text-2xl font-bold">PMO Pro</h1>
     <div class="flex items-center gap-3">
+      <div id="user-info" class="flex items-center gap-2 mr-2">
+        <img id="user-avatar" class="w-8 h-8 rounded-full" src="" alt="avatar" />
+        <span id="user-name" class="text-sm"></span>
+      </div>
       <button id="btnSync" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm">🔄 Sincronizar Pipefy → Projetos</button>
       <button id="btnLogout" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-sm">Sair</button>
     </div>
@@ -181,9 +185,21 @@
     </section>
   </main>
 
+  <div id="notification-container"></div>
+  <div id="confirmation-modal" class="hidden">
+    <div class="modal-box">
+      <p id="confirmation-message"></p>
+      <div class="modal-actions">
+        <button id="confirm-yes" class="btn-primary">Confirmar</button>
+        <button id="confirm-no" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-sm">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/env.js" defer></script>
   <script src="/supabase-client.js" defer></script>
+  <script src="/ui.js" defer></script>
   <script src="/app.js" defer></script>
   <script src="/allocations.js" defer></script>
   <script src="/dashboard.js" defer></script>

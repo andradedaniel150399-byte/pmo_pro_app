@@ -92,8 +92,27 @@ async function addProfessional() {
 
 // eventos
 document.getElementById('btnAddProf')?.addEventListener('click', addProfessional);
+function handleLogin() {
+  let user = {};
+  try {
+    user = JSON.parse(localStorage.getItem('demoUser') || '{}');
+  } catch {}
+  if (!user.name) {
+    user = {
+      name: 'Usuário Demo',
+      avatar: `https://i.pravatar.cc/40?u=demo`
+    };
+    localStorage.setItem('demoUser', JSON.stringify(user));
+  }
+  const avatarEl = document.getElementById('user-avatar');
+  const nameEl = document.getElementById('user-name');
+  if (avatarEl) avatarEl.src = user.avatar;
+  if (nameEl) nameEl.textContent = user.name;
+  showNotification(`Bem-vindo, ${user.name}!`, 'success');
+}
 
 // carrega listas ao abrir
+handleLogin();
 loadProjects();
 loadProfessionals();
 

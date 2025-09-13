@@ -160,22 +160,6 @@ document.getElementById('btnTheme')?.addEventListener('click', () => {
   localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
 });
 
-document.getElementById('btnSync')?.addEventListener('click', () => {
-  if (location.pathname.endsWith('/dashboard.html')) {
-    confirmAction('Sincronizar Pipefy → Projetos?', async () => {
-      await window.PMODashboard?.syncPipefy?.();
-    });
-  } else {
-    location.href = '/dashboard.html';
-  }
-});
-
-document.getElementById('btnLogout')?.addEventListener('click', () => {
-  confirmAction('Deseja sair?', () => {
-    handleLogout();
-  });
-});
-
 // carrega listas e estado ao abrir
 loadUser();
 updateUserUI();

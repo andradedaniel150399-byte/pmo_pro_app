@@ -348,6 +348,25 @@
     bindViewButtons();
     bindFilters();
     bindShortcuts();
+
+    const btnSync = document.getElementById('btnSync');
+    on(btnSync, 'click', () => {
+      if (location.pathname.endsWith('/dashboard.html')) {
+        confirmAction('Sincronizar Pipefy → Projetos?', async () => {
+          await syncPipefy();
+        });
+      } else {
+        location.href = '/dashboard.html';
+      }
+    });
+
+    const btnLogout = document.getElementById('btnLogout');
+    on(btnLogout, 'click', () => {
+      confirmAction('Deseja sair?', () => {
+        if (typeof handleLogout === 'function') handleLogout();
+      });
+    });
+
     await refreshAll();
 
     // Auto-refresh leve (opcional). Ajuste o tempo se quiser.

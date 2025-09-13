@@ -161,7 +161,8 @@ document.getElementById('btnTheme')?.addEventListener('click', () => {
   localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
 });
 document.getElementById('btnSync')?.addEventListener('click', () => {
-  location.href = '/dashboard.html';
+  const tabBtn = document.querySelector('[data-tab="view-dashboard"]');
+  tabBtn?.click();
 });
 
 // carrega listas e estado ao abrir

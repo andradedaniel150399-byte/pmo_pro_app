@@ -11,7 +11,7 @@
       #filterRange (7|30|90), #filterOwner (email), #filterStatus (texto)
   - Botões de ação: #btnSync (sincronizar Pipefy) e #btnLogout (sair)
   -------------------------------------------------------------
-  Dica: coloque este arquivo no final do <body> do seu dashboard.html/app.html
+  Dica: coloque este arquivo no final do <body> do seu app.html
   para garantir que o DOM já exista quando o script rodar.
 */
 

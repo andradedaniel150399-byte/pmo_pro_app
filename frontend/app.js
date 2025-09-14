@@ -22,7 +22,6 @@ async function fetchJSON(url) {
   if (!r.ok) throw new Error(data.error || r.statusText);
   return data;
 }
-=======
 // app.js — entrypoint leve para inicialização da UI e ligação entre módulos
 
 window.state = window.state || { theme: localStorage.getItem('theme') || 'light', user: null, db: { projects: [], professionals: [], allocations: [], comments: [], overview: null, timeseries: null }, charts: {}, dashboardLayout: [], capacityData: [] };
@@ -237,4 +236,3 @@ document.addEventListener('DOMContentLoaded', () => {
   })();
 
 });
-

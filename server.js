@@ -392,9 +392,9 @@ function mapCards(nodes) {
     return {
       external_id: n.id,
       name: n.title,
-      status,
-      owner_email,
-      priority,
+      pipefy_status: status,
+      pipefy_owner_email: owner_email,
+      pipefy_priority: priority,
       estimated_hours,
       started_at,
       meta,

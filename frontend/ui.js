@@ -39,7 +39,6 @@ function confirmAction(message, onConfirm, onCancel) {
   yesBtn.addEventListener('click', yesHandler);
   noBtn.addEventListener('click', noHandler);
 }
-
 function handleLogout() {
   localStorage.removeItem('demoUser');
   showNotification('Até logo!', 'info');

@@ -21,6 +21,7 @@ const PIPEFY_TOKEN = process.env.PIPEFY_TOKEN;
 const PIPEFY_PIPE_IDS = (process.env.PIPEFY_PIPE_IDS || '').split(',').filter(Boolean);
 const PIPEFY_STATUS_FIELD = process.env.PIPEFY_STATUS_FIELD || '';
 const PIPEFY_OWNER_EMAIL_FIELD = process.env.PIPEFY_OWNER_EMAIL_FIELD || '';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const app = express();
 app.use(cors());
@@ -42,6 +43,11 @@ if (!SUPABASE_ANON_KEY) {
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+// Modo mock local para facilitar smoke-tests locais quando quem estiver
+// executando fornecer variáveis 'dummy' (útil no dev container). Isso evita
+// falhas de conexão com um Supabase inexistente e permite testar o frontend.
+const MOCK_DEV = SUPABASE_URL?.includes('localhost') || (SUPABASE_SERVICE_KEY || '').includes('dummy');
 
 // Expor variáveis públicas para o frontend
 app.get('/env.js', (_req, res) => {
@@ -119,6 +125,9 @@ app.post('/api/sync/pipefy', async (_req, res) => {
 // ===== Métricas para o dashboard =====
 app.get('/api/metrics/overview', async (_req, res) => {
   try {
+    if (MOCK_DEV) {
+      return res.json({ total_projects: 3, projects_last_30d: 1, owners: 2, by_status: { imported: 2, open: 1 }, total_allocations: 2, total_hours: 40 });
+    }
     const { data: projects, error } = await supabase
       .from('projects')
       .select('*')
@@ -191,6 +200,9 @@ app.get('/api/metrics/timeseries', async (req, res) => {
 
 app.get('/api/metrics/top-projects', async (req, res) => {
   try {
+    if (MOCK_DEV) {
+      return res.json({ items: [{ id: 'p1', name: 'Projeto A', status: 'Em andamento', owner_email: 'a@x.com', hours: 20 }, { id: 'p2', name: 'Projeto B', status: 'Concluído', owner_email: 'b@x.com', hours: 10 }] });
+    }
     const limit = Math.max(3, Math.min(20, Number(req.query.limit || 10)));
     const { data: allocs, error } = await supabase
       .from('allocations')
@@ -226,6 +238,7 @@ app.get('/api/metrics/top-projects', async (req, res) => {
 
 // ===== CRUD já existentes =====
 app.get('/api/professionals', async (_req, res) => {
+  if (MOCK_DEV) return res.json([{ id: 'u1', name: 'Alice', email: 'alice@example.com', role: 'PM', hourly_rate: 120 }, { id: 'u2', name: 'Bruno', email: 'bruno@example.com', role: 'Dev', hourly_rate: 80 }]);
   const { data, error } = await supabase
     .from('professionals')
     .select('*')
@@ -249,6 +262,7 @@ app.post('/api/professionals', async (req, res) => {
 
 app.get('/api/allocations', async (req, res) => {
   try {
+    if (MOCK_DEV) return res.json([{ id: 'a1', project_id: 'p1', professional_id: 'u1', hours: 20, start: '2025-09-01', end: '2025-09-30' }, { id: 'a2', project_id: 'p2', professional_id: 'u2', hours: 20, start: '2025-09-01', end: '2025-09-30' }]);
     let query = supabase
       .from('allocations_view')
       .select('*')
@@ -269,23 +283,10 @@ app.get('/api/allocations', async (req, res) => {
   }
 });
 
-app.post('/api/allocations', async (req, res) => {
-  const { project_id, professional_id, hours, start_date, end_date } = req.body || {};
-  if (!project_id || !professional_id) {
-    return res.status(400).json({ error: 'project_id e professional_id são obrigatórios' });
-  }
-  const { data, error } = await supabase
-    .from('allocations')
-    .insert([{ project_id, professional_id, hours, start_date, end_date }])
-    .select('*')
-    .single();
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
-});
-
 app.post('/api/allocations/cleanup', async (req, res) => {
   try {
     const { month, professional_id, project_id } = req.body || {};
+    // Evita deleções amplas sem filtros (segurança)
     if (!month && !professional_id && !project_id) {
       return res.status(400).json({ error: 'Informe ao menos um filtro' });
     }
@@ -293,14 +294,12 @@ app.post('/api/allocations/cleanup', async (req, res) => {
     let query = supabase.from('allocations').delete();
 
     if (month) {
-      const start = new Date(`${month}-01`);
-      if (!isNaN(start)) {
-        const end = new Date(start);
-        end.setMonth(end.getMonth() + 1);
-        query = query
-          .gte('start_date', start.toISOString())
-          .lt('start_date', end.toISOString());
-      }
+      // month esperado no formato YYYY-MM
+      const start = `${month}-01`;
+      const endDate = new Date(start);
+      endDate.setMonth(endDate.getMonth() + 1);
+      const end = endDate.toISOString().slice(0, 10);
+      query = query.gte('start_date', start).lt('start_date', end);
     }
 
     if (professional_id) query = query.eq('professional_id', professional_id);
@@ -308,6 +307,7 @@ app.post('/api/allocations/cleanup', async (req, res) => {
 
     const { data, error } = await query.select('id');
     if (error) throw error;
+
     res.json({ ok: true, deleted: data.length });
   } catch (e) {
     console.error('[allocations/cleanup]', e);
@@ -370,8 +370,23 @@ function mapCards(nodes) {
       if (iid) meta[iid] = f?.value ?? null;
     });
     const look = (iid) => (iid ? (meta[iid] ?? null) : null);
+    // Map known fields into top-level columns when available. The
+    // environment variables PIPEFY_STATUS_FIELD and PIPEFY_OWNER_EMAIL_FIELD
+    // contain the internal_id of the corresponding Pipefy form fields.
     const status = look(PIPEFY_STATUS_FIELD) || 'imported';
     const owner_email = look(PIPEFY_OWNER_EMAIL_FIELD) || null;
+    const priority = look('priority') || look('prioridade') || look('priority_level') || null;
+    // estimated hours may come as string/number; attempt to coerce to number
+    const estimated_raw = look('estimated_hours') || look('estimated') || look('estimativa_horas') || null;
+    const estimated_hours = estimated_raw == null ? null : Number(String(estimated_raw).replace(/[^0-9\.\-]/g, '')) || null;
+    // started_at may be a date-like string in meta
+    const started_raw = look('started_at') || look('start_date') || look('data_inicio') || null;
+    let started_at = null;
+    if (started_raw) {
+      const d = new Date(started_raw);
+      if (!Number.isNaN(d.getTime())) started_at = d.toISOString().slice(0, 10);
+    }
+
     const nowISO = new Date().toISOString();
 
     return {
@@ -379,12 +394,28 @@ function mapCards(nodes) {
       name: n.title,
       status,
       owner_email,
+      priority,
+      estimated_hours,
+      started_at,
       meta,
       created_at: nowISO,
       updated_at: nowISO
     };
   });
 }
+
+// ===== LLM / Gemini proxy (mock em dev) =====
+app.post('/api/gemini', async (req, res) => {
+  try {
+    if (MOCK_DEV) return res.json({ ok: true, text: 'Resposta mock do Gemini (MOCK_DEV)', echo: req.body });
+    if (!GEMINI_API_KEY) return res.status(400).json({ error: 'GEMINI_API_KEY não configurado' });
+    // Aqui ficaria o forward para o fornecedor LLM (ex.: OpenAI, Vertex)
+    res.json({ ok: true, echo: req.body });
+  } catch (e) {
+    console.error('[api/gemini]', e);
+    res.status(500).json({ error: String(e.message || e) });
+  }
+});
 
 // ===== SPA fallback =====
 app.get('*', (req, res) => {

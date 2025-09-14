@@ -1,66 +1,72 @@
-// Funções de listagem e criação de alocações
-async function loadAllocations(filters = {}) {
-  try {
-    const params = new URLSearchParams();
-    if (filters.project_id) params.append('project_id', filters.project_id);
-    if (filters.professional_id) params.append('professional_id', filters.professional_id);
-    if (filters.start_date) params.append('start_date', filters.start_date);
-    if (filters.end_date) params.append('end_date', filters.end_date);
-    const qs = params.toString();
-    const r = await fetch('/api/allocations' + (qs ? `?${qs}` : ''));
-    const j = await r.json();
-    if (!r.ok) throw new Error(j.error || 'erro');
-
-    const tbody = document.getElementById('allocations-tbody');
-    tbody.innerHTML = '';
-    (j || []).forEach(a => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="py-2 pr-4">${a.project_name ?? a.project_id}</td>
-        <td class="py-2 pr-4">${a.professional_name ?? a.professional_id}</td>
-        <td class="py-2 pr-4">${a.hours ?? 0}</td>
-        <td class="py-2">${(a.start_date || '')} — ${(a.end_date || '')}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  } catch (e) {
-    console.error('loadAllocations', e);
+// allocations.js - criar e listar alocações
+(function () {
+  async function loadAllocations() {
+    try {
+      const list = await window.fetchJSON('/api/allocations');
+      window.state.db.allocations = list || [];
+      const tbody = document.getElementById('allocations-tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      (window.state.db.allocations || []).forEach(a => {
+        const tr = document.createElement('tr');
+        const proj = (window.state.db.projects || []).find(p => String(p.id) === String(a.project_id));
+        const prof = (window.state.db.professionals || []).find(p => String(p.id) === String(a.professional_id));
+        tr.innerHTML = `<td class="py-2 pr-4">${proj?.name ?? a.project_id}</td><td class="py-2 pr-4">${prof?.name ?? a.professional_id}</td><td class="py-2 pr-4">${a.hours}</td><td class="py-2">${a.start} → ${a.end}</td>`;
+        tbody.appendChild(tr);
+      });
+    } catch (e) { console.error('loadAllocations', e); }
   }
-}
 
-async function createAllocation() {
-  const project_id = document.getElementById('alloc-project').value;
-  const professional_id = document.getElementById('alloc-prof').value;
-  const hours = Number(document.getElementById('alloc-hours').value || 0);
-  const start_date = document.getElementById('alloc-start').value || null;
-  const end_date = document.getElementById('alloc-end').value || null;
-  if (!project_id || !professional_id) return alert('Selecione projeto e profissional');
-
-  try {
-    const r = await fetch('/api/allocations', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ project_id, professional_id, hours, start_date, end_date })
-    });
-    const j = await r.json();
-    if (!r.ok) throw new Error(j.error || 'erro ao criar alocação');
-    await loadAllocations();
-    alert('Alocação criada!');
-  } catch (e) {
-    alert('Erro: ' + e.message);
+  async function createAllocation() {
+    const project = document.getElementById('alloc-project')?.value;
+    const prof = document.getElementById('alloc-prof')?.value;
+    const hours = Number(document.getElementById('alloc-hours')?.value || 0);
+    const start = document.getElementById('alloc-start')?.value;
+    const end = document.getElementById('alloc-end')?.value;
+    if (!project || !prof || !hours) return window.showNotification?.('Preencha projeto, profissional e horas', 'error');
+    try {
+      await fetch('/api/allocations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ project_id: project, professional_id: prof, hours, start, end }) });
+      window.showNotification?.('Alocação criada', 'success');
+      await loadAllocations();
+    } catch (e) { console.error('createAllocation', e); window.showNotification?.('Erro ao criar alocação', 'error'); }
   }
-}
 
-function applyAllocationFilters() {
-  const project_id = document.getElementById('filter-project')?.value || '';
-  const professional_id = document.getElementById('filter-prof')?.value || '';
-  const start_date = document.getElementById('filter-start')?.value || '';
-  const end_date = document.getElementById('filter-end')?.value || '';
-  loadAllocations({ project_id, professional_id, start_date, end_date });
-}
+  window.loadAllocations = loadAllocations;
+  window.createAllocation = createAllocation;
+})();
+// allocations.js — gerencia criação e listagem de alocações
+(function () {
+  async function loadAllocations() {
+    try {
+      const arr = await window.fetchJSON('/api/allocations');
+      window.state.db.allocations = arr || [];
+      const tbody = document.getElementById('allocations-tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      (window.state.db.allocations || []).forEach(a => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="py-2 pr-4">${a.project_name || a.project_id}</td><td class="py-2 pr-4">${a.professional_name || a.professional_id}</td><td class="py-2 pr-4">${a.hours || 0}</td><td class="py-2">${a.start || ''} - ${a.end || ''}</td>`;
+        tbody.appendChild(tr);
+      });
+    } catch (e) { console.error('loadAllocations', e); }
+  }
 
-document.getElementById('btnCreateAlloc')?.addEventListener('click', createAllocation);
-document.getElementById('btnFilterAlloc')?.addEventListener('click', applyAllocationFilters);
+  async function createAllocation() {
+    const project = document.getElementById('alloc-project')?.value;
+    const prof = document.getElementById('alloc-prof')?.value;
+    const hours = document.getElementById('alloc-hours')?.value;
+    const start = document.getElementById('alloc-start')?.value;
+    const end = document.getElementById('alloc-end')?.value;
+    if (!project || !prof || !hours) return alert('Preencha projeto, profissional e horas');
+    try {
+      const r = await fetch('/api/allocations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ project_id: project, professional_id: prof, hours, start, end }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || 'Erro');
+      await loadAllocations();
+      window.showNotification?.('Alocação criada', 'success');
+    } catch (e) { alert('Erro: ' + e.message); }
+  }
 
-loadAllocations();
-window.loadAllocations = loadAllocations;
-
+  window.loadAllocations = loadAllocations;
+  window.createAllocation = createAllocation;
+})();

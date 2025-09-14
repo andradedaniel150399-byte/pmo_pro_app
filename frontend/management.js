@@ -1,4 +1,4 @@
-// Gestão de alocações: abas internas, alocação em lote e limpeza
+// Script da página de gestão: abas internas, alocação em lote e limpeza
 
 document.addEventListener('DOMContentLoaded', () => {
   bindInternalTabs();

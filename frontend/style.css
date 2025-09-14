@@ -18,6 +18,20 @@
 .input { @apply w-full px-3 py-2 rounded-xl border border-slate-200 bg-white; }
 .btn-primary { @apply px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm; }
 
+/* Notificações */
+.notification { @apply fixed right-4 top-4 bg-white p-3 rounded-lg shadow-md text-sm z-50; }
+.notification-info { @apply border-l-4 border-blue-400; }
+.notification-success { @apply border-l-4 border-green-400; }
+.notification-error { @apply border-l-4 border-red-400; }
+
+/* Modal genérico */
+.modal-box { @apply bg-white p-6 rounded-xl shadow-xl max-w-3xl mx-auto; }
+.hidden { display: none !important; }
+
+/* Header adjustments */
+header img#user-avatar { @apply object-cover; }
+
+
 .tab-panel.hidden { display: none; }
 .tab-panel.block { display: block; }
 

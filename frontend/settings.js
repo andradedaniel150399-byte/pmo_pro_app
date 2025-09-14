@@ -11,8 +11,10 @@ function initTabs() {
         p.classList.remove('block');
       });
       const el = document.getElementById(target);
-      el.classList.remove('hidden');
-      el.classList.add('block');
+      if (el) {
+        el.classList.remove('hidden');
+        el.classList.add('block');
+      }
     });
   });
 }
@@ -23,18 +25,36 @@ async function loadTeam() {
     const r = await fetch('/api/professionals');
     const list = await r.json();
     const container = document.getElementById('team-list');
+    if (!container) return;
     container.innerHTML = '';
     (list || []).forEach(p => {
       const row = document.createElement('div');
       row.className = 'flex gap-2 items-center';
-      row.innerHTML = `
-        <input class="input flex-1" value="${p.name || ''}" />
-        <input class="input flex-1" value="${p.email || ''}" />
-        <input class="input w-32" value="${p.role || ''}" />
-        <button class="px-3 py-2 rounded-xl bg-red-100 text-red-700 text-sm remove-prof" data-id="${p.id}">Remover</button>
-      `;
+
+      const nameInput = document.createElement('input');
+      nameInput.className = 'input flex-1';
+      nameInput.value = p.name || '';
+      row.appendChild(nameInput);
+
+      const emailInput = document.createElement('input');
+      emailInput.className = 'input flex-1';
+      emailInput.value = p.email || '';
+      row.appendChild(emailInput);
+
+      const roleInput = document.createElement('input');
+      roleInput.className = 'input w-32';
+      roleInput.value = p.role || '';
+      row.appendChild(roleInput);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'px-3 py-2 rounded-xl bg-red-100 text-red-700 text-sm remove-prof';
+      removeBtn.dataset.id = p.id;
+      removeBtn.textContent = 'Remover';
+      row.appendChild(removeBtn);
+
       container.appendChild(row);
-      row.querySelector('.remove-prof').addEventListener('click', async () => {
+
+      removeBtn.addEventListener('click', async () => {
         row.remove();
         try {
           await fetch('/api/professionals/' + p.id, { method: 'DELETE' });
@@ -50,22 +70,28 @@ async function loadTeam() {
 
 // Carrega configurações de integração do localStorage
 function loadIntegration() {
-  document.getElementById('pipefyApiKey').value = localStorage.getItem('pipefyApiKey') || '';
-  document.getElementById('pipefyPipeId').value = localStorage.getItem('pipefyPipeId') || '';
-  document.getElementById('serviceCodes').value = localStorage.getItem('serviceCodes') || '';
+  const apiEl = document.getElementById('pipefyApiKey');
+  const pipeEl = document.getElementById('pipefyPipeId');
+  const svcEl = document.getElementById('serviceCodes');
+  if (apiEl) apiEl.value = localStorage.getItem('pipefyApiKey') || '';
+  if (pipeEl) pipeEl.value = localStorage.getItem('pipefyPipeId') || '';
+  if (svcEl) svcEl.value = localStorage.getItem('serviceCodes') || '';
 }
 
 function saveIntegration() {
-  localStorage.setItem('pipefyApiKey', document.getElementById('pipefyApiKey').value.trim());
-  localStorage.setItem('pipefyPipeId', document.getElementById('pipefyPipeId').value.trim());
-  localStorage.setItem('serviceCodes', document.getElementById('serviceCodes').value.trim());
+  const apiEl = document.getElementById('pipefyApiKey');
+  const pipeEl = document.getElementById('pipefyPipeId');
+  const svcEl = document.getElementById('serviceCodes');
+  if (apiEl) localStorage.setItem('pipefyApiKey', apiEl.value.trim());
+  if (pipeEl) localStorage.setItem('pipefyPipeId', pipeEl.value.trim());
+  if (svcEl) localStorage.setItem('serviceCodes', svcEl.value.trim());
 }
 
 // Botão Salvar e Sincronizar
 async function handlePipefySync() {
   const btn = document.getElementById('btnSaveSync');
   try {
-    btn.disabled = true;
+    if (btn) btn.disabled = true;
     const r = await fetch('/api/sync/pipefy', { method: 'POST', cache: 'no-store' });
     const j = await r.json();
     if (!r.ok) throw new Error(j.error || 'erro');
@@ -73,7 +99,7 @@ async function handlePipefySync() {
   } catch (e) {
     alert('Erro: ' + e.message);
   } finally {
-    btn.disabled = false;
+    if (btn) btn.disabled = false;
   }
 }
 window.handlePipefySync = handlePipefySync;

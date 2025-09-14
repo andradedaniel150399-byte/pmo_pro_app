@@ -1,58 +1,233 @@
-<!doctype html>
-<html lang="pt-br">
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>PMO Pro</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="./style.css" />
-  <link rel="stylesheet" href="./landing.css" />
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="/landing.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/env.js" defer></script>
-  <script src="./supabase-client.js" defer></script>
-  <script src="./ui.js" defer></script>
-  <script src="./auth.js" defer></script>
+  <script src="/supabase-client.js" defer></script>
+  <script src="/ui.js" defer></script>
+  <script src="/auth.js" defer></script>
+  <!-- Chart.js para gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- SortableJS para o Kanban -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 flex flex-col">
-  <main class="flex-grow flex flex-col">
-    <section class="hero">
-      <h1 class="hero-title">PMO Pro 🚀</h1>
-      <p class="hero-subtitle">Gerencie seus projetos com facilidade.</p>
+<body class="bg-slate-50 text-slate-900">
+  <header class="max-w-6xl mx-auto px-4 py-6 flex items-center justify-between">
+    <h1 class="text-2xl font-bold">PMO Pro</h1>
+    <div class="flex items-center gap-3">
+      <div id="user-info" class="flex items-center gap-2 mr-2">
+        <img id="user-avatar" class="w-8 h-8 rounded-full" src="" alt="avatar" />
+        <span id="user-name" class="text-sm"></span>
+      </div>
+      <button id="btnSync" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm">🔄 Sincronizar Pipefy → Projetos</button>
+      <button id="btnLogout" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-sm">Sair</button>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 pb-24">
+    <!-- Tabs principais -->
+    <div class="mb-6">
+      <nav class="flex gap-2">
+        <button data-tab="tab-dashboard" class="tab-btn active">Dashboard</button>
+        <button data-tab="tab-projects" class="tab-btn">Projetos</button>
+        <button data-tab="tab-kanban" class="tab-btn">Kanban</button>
+        <button data-tab="tab-professionals" class="tab-btn">Profissionais</button>
+        <button data-tab="tab-allocations" class="tab-btn">Alocações</button>
+        <button data-tab="tab-capacity" class="tab-btn">Capacidade</button>
+      </nav>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section id="tab-dashboard" class="tab-panel block">
+      <!-- Atalhos e resumo -->
+      <div id="dashboard-top" class="flex items-center justify-between mb-6">
+        <div id="dashboard-summary" class="text-sm text-slate-600"></div>
+        <div class="flex gap-2">
+          <button id="btnCreateProject" class="btn-primary">Criar Projeto</button>
+        </div>
+      </div>
+
+      <!-- Sub-aba: visão -->
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-sm font-medium">Visão:</span>
+        <button data-view="executivo" class="view-btn active">Executivo</button>
+        <button data-view="gerencial" class="view-btn">Gerencial</button>
+        <button data-view="personalizado" class="view-btn">Personalizado</button>
+      </div>
+
+      <!-- KPIs -->
+      <section id="dashboard-kpis" class="mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="kpi-card"><div class="kpi-label">Projetos (total)</div><div id="kpi-total" class="kpi-value">-</div></div>
+          <div class="kpi-card"><div class="kpi-label">Novos (30d)</div><div id="kpi-last30" class="kpi-value">-</div></div>
+          <div class="kpi-card"><div class="kpi-label">Owners únicos</div><div id="kpi-owners" class="kpi-value">-</div></div>
+          <div class="kpi-card"><div class="kpi-label">Horas alocadas</div><div id="kpi-hours" class="kpi-value">-</div></div>
+        </div>
+      </section>
+
+      <!-- Gráficos -->
+      <section id="dashboard-charts" class="mb-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="card">
+            <div class="card-title">Projetos por Status</div>
+            <canvas id="chartStatus" height="120"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title">Projetos criados (últimos 30 dias)</div>
+            <canvas id="chartSeries" height="120"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Profitability -->
+      <section id="dashboard-profitability" class="mb-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="card">
+            <div class="card-title">Lucro por Projeto</div>
+            <canvas id="profitabilityChart" height="120"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title">Tabela de Lucro</div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead><tr class="text-left">
+                  <th class="py-2 pr-4">Projeto</th>
+                  <th class="py-2 pr-4 text-right">Receita</th>
+                  <th class="py-2 pr-4 text-right">Custo</th>
+                  <th class="py-2 pr-4 text-right">Lucro</th>
+                  <th class="py-2 text-right">Margem</th>
+                </tr></thead>
+                <tbody id="profitabilityTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tabela -->
+      <section id="dashboard-top-projects">
+        <div class="card">
+          <div class="card-title">Top projetos por horas alocadas</div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead><tr class="text-left">
+                <th class="py-2 pr-4">Projeto</th>
+                <th class="py-2 pr-4">Status</th>
+                <th class="py-2 pr-4">Owner</th>
+                <th class="py-2">Horas</th>
+              </tr></thead>
+              <tbody id="top-projects-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Portfolio Gantt Chart -->
+      <section id="view-portfolio" class="card p-4 mt-6"></section>
     </section>
 
-    <section class="max-w-4xl mx-auto px-4 grid gap-8 md:grid-cols-3">
-      <div class="feature-card">
-        <img src="https://www.svgrepo.com/show/448261/dashboard.svg" alt="Dashboards" class="w-12 h-12 mx-auto mb-4" />
-        <h3 class="font-semibold mb-2">Dashboards</h3>
-        <p class="text-sm text-gray-600">Acompanhe o progresso em tempo real.</p>
-      </div>
-      <div class="feature-card">
-        <img src="https://www.svgrepo.com/show/384519/tasks.svg" alt="Tarefas" class="w-12 h-12 mx-auto mb-4" />
-        <h3 class="font-semibold mb-2">Tarefas</h3>
-        <p class="text-sm text-gray-600">Organize tarefas e prazos facilmente.</p>
-      </div>
-      <div class="feature-card">
-        <img src="https://www.svgrepo.com/show/487127/collaboration.svg" alt="Colaboração" class="w-12 h-12 mx-auto mb-4" />
-        <h3 class="font-semibold mb-2">Colaboração</h3>
-        <p class="text-sm text-gray-600">Trabalhe com sua equipe de forma integrada.</p>
+    <!-- PROJETOS (lista simples para começar) -->
+    <section id="tab-projects" class="tab-panel hidden">
+      <div class="card">
+        <div class="card-title">Projetos</div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead><tr class="text-left">
+              <th class="py-2 pr-4">Nome</th>
+              <th class="py-2 pr-4">External ID</th>
+              <th class="py-2 pr-4">Status</th>
+              <th class="py-2 pr-4">Owner (email)</th>
+              <th class="py-2">Criado em</th>
+            </tr></thead>
+            <tbody id="projects-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
-    <section class="max-w-md mx-auto w-full px-4 py-12">
-      <div class="flex justify-center mb-6 gap-2">
-        <button id="tab-signin" class="tab-btn active">Entrar</button>
-        <button id="tab-signup" class="tab-btn">Cadastrar</button>
+    <!-- KANBAN -->
+    <section id="tab-kanban" class="tab-panel hidden">
+      <div id="kanban-board" class="kanban-board"></div>
+    </section>
+
+    <!-- PROFISSIONAIS -->
+    <section id="tab-professionals" class="tab-panel hidden">
+      <div class="card mb-4">
+        <div class="card-title">Adicionar Profissional</div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <input id="prof-name" class="input" placeholder="Nome" />
+          <input id="prof-email" class="input" placeholder="Email" />
+          <input id="prof-role" class="input" placeholder="Função/Role" />
+        </div>
+        <div class="mt-3">
+          <button id="btnAddProf" class="btn-primary">Adicionar Profissional</button>
+        </div>
       </div>
-      <form id="auth-form" class="space-y-3">
-        <input id="auth-email" type="email" required placeholder="Seu e-mail" class="input" />
-        <input id="auth-password" type="password" required placeholder="Senha" class="input" />
-        <button id="auth-submit" type="submit" class="btn-primary w-full">Entrar</button>
-      </form>
-      <button id="auth-google" class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-slate-200 mt-3 hover:bg-slate-50">
-        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5" />
-        <span>Continuar com Google</span>
-      </button>
-      <p id="auth-msg" class="text-sm text-center text-red-500 mt-2"></p>
+
+      <div class="card">
+        <div class="card-title">Profissionais</div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead><tr class="text-left">
+              <th class="py-2 pr-4">Nome</th><th class="py-2 pr-4">Email</th><th class="py-2">Função</th>
+            </tr></thead>
+            <tbody id="professionals-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ALOCAÇÕES -->
+    <section id="tab-allocations" class="tab-panel hidden">
+      <div class="card mb-4">
+        <div class="card-title">Criar Alocação</div>
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-3">
+          <select id="alloc-project" class="input"></select>
+          <select id="alloc-prof" class="input"></select>
+          <input id="alloc-hours" class="input" type="number" placeholder="Horas" />
+          <input id="alloc-start" class="input" type="date" placeholder="Início" />
+          <input id="alloc-end" class="input" type="date" placeholder="Fim" />
+        </div>
+        <div class="mt-3">
+          <button id="btnCreateAlloc" class="btn-primary w-full">Criar Alocação</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Alocações</div>
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-3">
+          <select id="filter-project" class="input"></select>
+          <select id="filter-prof" class="input"></select>
+          <input id="filter-start" class="input" type="date" />
+          <input id="filter-end" class="input" type="date" />
+          <button id="btnFilterAlloc" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-sm">Filtrar</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead><tr class="text-left">
+              <th class="py-2 pr-4">Projeto</th><th class="py-2 pr-4">Profissional</th><th class="py-2 pr-4">Horas</th><th class="py-2">Período</th>
+            </tr></thead>
+            <tbody id="allocations-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    <!-- CAPACIDADE -->
+    <section id="tab-capacity" class="tab-panel hidden">
+      <div class="card">
+        <div class="card-title">Capacidade vs Demanda</div>
+        <canvas id="capacityGapChart" height="120"></canvas>
+        <div class="mt-4">
+          <button id="btnAnalyzeRisks" class="btn-primary">Analisar Riscos</button>
+          <p id="riskAnalysisText" class="mt-2 text-sm text-slate-700 whitespace-pre-line"></p>
+        </div>
+      </div>
     </section>
   </main>
   <footer class="text-center py-4 text-xs text-gray-500">© 2024 PMO Pro</footer>
@@ -66,6 +241,19 @@
       </div>
     </div>
   </div>
+  <script src="/navbar.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="/env.js" defer></script>
+  <script src="/supabase-client.js" defer></script>
+  <script src="/ui.js" defer></script>
+  <script src="/api.js" defer></script>
+  <script src="/projects.js" defer></script>
+  <script src="/professionals.js" defer></script>
+  <script src="/allocations.js" defer></script>
+  <script src="/profitability.js" defer></script>
+  <script src="/kanban.js" defer></script>
+  <script src="/capacity.js" defer></script>
+  <script src="/app.js" defer></script>
+  <script src="/dashboard.js" defer></script>
 </body>
 </html>
-

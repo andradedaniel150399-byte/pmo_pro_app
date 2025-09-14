@@ -9,6 +9,21 @@ const state = {
   }
 };
 
+// Chamada helper para a API Gemini via backend
+async function callGemini(prompt, params = {}) {
+  const res = await fetch('/api/gemini', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, ...params })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.error) {
+    throw new Error(data.error || 'Erro ao chamar Gemini');
+  }
+  return data;
+}
+window.callGemini = callGemini;
+
 // Alterna visualizações principais (tabs)
 function switchView(viewId) {
   document.querySelectorAll('.tab-panel').forEach(sec => {

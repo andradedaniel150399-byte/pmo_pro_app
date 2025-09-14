@@ -63,6 +63,46 @@ app.get('/', (_req, res) => res.sendFile(path.join(FRONT_DIR, 'index.html')));
 // Health
 app.get('/api', (_req, res) => res.json({ ok: true, service: 'PMO Pro API' }));
 
+// ===== Gemini API proxy =====
+app.post('/api/gemini', async (req, res) => {
+  try {
+    if (!GEMINI_API_KEY) {
+      return res.status(500).json({ error: 'Configure GEMINI_API_KEY no ambiente' });
+    }
+    const { prompt, model = 'gemini-pro', schema, ...rest } = req.body || {};
+    if (!prompt) {
+      return res.status(400).json({ error: 'prompt é obrigatório' });
+    }
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+    const body = { contents: [{ parts: [{ text: prompt }] }], ...rest };
+    if (schema) {
+      body.generationConfig = { ...(body.generationConfig || {}), response_mime_type: 'application/json', response_schema: schema };
+    }
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const json = await r.json().catch(() => ({}));
+    if (!r.ok || json.error) {
+      return res.status(r.status).json({ error: json.error?.message || 'Gemini request failed' });
+    }
+    const text = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (schema) {
+      try {
+        const parsed = JSON.parse(text);
+        return res.json(parsed);
+      } catch {
+        return res.status(500).json({ error: 'Resposta inválida da Gemini', text });
+      }
+    }
+    res.json({ text });
+  } catch (e) {
+    console.error('[gemini]', e);
+    res.status(500).json({ error: e.message || 'Erro desconhecido' });
+  }
+});
+
 // ===== Pipefy: inspecionar campos =====
 app.get('/api/inspect/fields', async (req, res) => {
   try {

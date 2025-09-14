@@ -1,3 +1,53 @@
+// Utilitários de autenticação reutilizáveis
+
+// Inclui automaticamente o token nas chamadas fetch
+const originalFetch = window.fetch.bind(window);
+window.fetch = (input, init = {}) => {
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    init.headers = { ...(init.headers || {}), Authorization: `Bearer ${token}` };
+  }
+  return originalFetch(input, init);
+};
+
+async function handleSession(session) {
+  if (!session) return;
+  localStorage.setItem('access_token', session.access_token);
+  localStorage.setItem('refresh_token', session.refresh_token);
+  if (window.state) {
+    state.currentUser = session.user;
+    if (typeof updateUserUI === 'function') updateUserUI();
+  }
+}
+
+async function startSession(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  await handleSession(data.session);
+  return data.session;
+}
+
+async function endSession() {
+  await supabase.auth.signOut();
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  if (window.state) {
+    state.currentUser = null;
+    if (typeof updateUserUI === 'function') updateUserUI();
+  }
+}
+
+async function restoreSession() {
+  const { data: { session } } = await supabase.auth.getSession();
+  await handleSession(session);
+  return session;
+}
+
+window.startSession = startSession;
+window.endSession = endSession;
+window.restoreSession = restoreSession;
+
+// Código específico para a página de autenticação
 document.addEventListener('DOMContentLoaded', () => {
   const authForm = document.getElementById('auth-form');
   const authMsg = document.getElementById('auth-msg');
@@ -35,9 +85,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const { error } = await supabase.auth.signUp({ email, password });
       authMsg.textContent = error ? 'Erro no cadastro: ' + error.message : 'Conta criada! Agora faça login.';
     } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) authMsg.textContent = 'Erro no login: ' + error.message;
-      else window.location.replace('/');
+      try {
+        await startSession(email, password);
+        window.location.replace('app.html');
+      } catch (error) {
+        authMsg.textContent = 'Erro no login: ' + (error?.message || String(error));
+      }
     }
   });
 
@@ -58,8 +111,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function checkAndRedirectIfLogged() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session && isOn('index.html')) window.location.replace('/');
+  const session = await restoreSession();
+  if (session && isOn('index.html')) window.location.replace('app.html');
 }
 
 function isOn(page) {

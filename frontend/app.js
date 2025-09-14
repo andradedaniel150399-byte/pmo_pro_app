@@ -1,13 +1,14 @@
 // Estado global simples da aplicação
 const state = {
   theme: localStorage.getItem('theme') || 'light',
-  user: null,
+  currentUser: null,
   data: {
     projects: [],
     professionals: [],
     allocations: []
   }
 };
+window.state = state;
 
 // Alterna visualizações principais (tabs)
 function switchView(viewId) {
@@ -28,6 +29,21 @@ function applyTheme() {
   document.documentElement.classList.toggle('dark', isDark);
   document.body.classList.toggle('dark', isDark);
 }
+
+function updateUserUI() {
+  const infoEl = document.getElementById('user-info');
+  const nameEl = document.getElementById('user-name');
+  const avatarEl = document.getElementById('user-avatar');
+  if (infoEl) infoEl.classList.toggle('hidden', !state.currentUser);
+  if (state.currentUser) {
+    if (nameEl) nameEl.textContent = state.currentUser.email || state.currentUser.user_metadata?.full_name || '';
+    if (avatarEl) avatarEl.src = state.currentUser.user_metadata?.avatar_url || '';
+  } else {
+    if (nameEl) nameEl.textContent = '';
+    if (avatarEl) avatarEl.src = '';
+  }
+}
+window.updateUserUI = updateUserUI;
 
 // Carrega lista de projetos (aba Projetos) e preenche selects usados nas alocações
 async function loadProjects() {
@@ -126,6 +142,16 @@ window.loadProjects = loadProjects;
 
 // Navegação por hash para permitir links diretos para abas
 document.addEventListener('DOMContentLoaded', () => {
+  updateUserUI();
+  restoreSession().then(session => {
+    if (!session) window.location.replace('index.html');
+  });
+
+  document.getElementById('btnLogout')?.addEventListener('click', async () => {
+    await endSession();
+    window.location.replace('index.html');
+  });
+
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const view = btn.dataset.tab;

@@ -111,14 +111,7 @@ app.post('/api/sync/pipefy', async (_req, res) => {
     for (const pipeId of PIPEFY_PIPE_IDS) {
       const entries = await fetchPipeProjects(pipeId);
       if (entries.length === 0) continue;
-      // Debug: log keys present in the first entry to aid debugging on deployed envs
-      try {
-        if (MOCK_DEV && entries && entries.length) {
-          console.log('[sync/pipefy] sample entry keys:', Object.keys(entries[0]));
-        }
-      } catch (e) {
-        if (MOCK_DEV) console.log('[sync/pipefy] failed to log entry keys', e);
-      }
+      // (no debug logging in production)
       const { error } = await supabase.from('projects').upsert(entries, { onConflict: 'external_id' });
       if (error) throw error;
       upserts += entries.length;
@@ -425,30 +418,7 @@ app.post('/api/gemini', async (req, res) => {
   }
 });
 
-// ===== Debug: rota temporária para inspecionar registros de projects =====
-// Acesso permitido apenas em MOCK_DEV ou quando DEBUG_TOKEN está configurado e é enviado via ?token=...
-app.get('/api/debug/projects', async (req, res) => {
-  try {
-    const token = req.query.token;
-    if (!MOCK_DEV) {
-      if (!process.env.DEBUG_TOKEN || token !== process.env.DEBUG_TOKEN) {
-        return res.status(403).json({ error: 'forbidden' });
-      }
-    }
-
-    const limit = Math.max(1, Math.min(100, Number(req.query.limit || 20)));
-    const { data, error } = await supabase
-      .from('projects')
-      .select('external_id, name, pipefy_status, pipefy_owner_email, pipefy_priority, estimated_hours, started_at, created_at')
-      .order('created_at', { ascending: false })
-      .limit(limit);
-    if (error) throw error;
-    res.json({ items: data || [] });
-  } catch (e) {
-    console.error('[debug/projects]', e);
-    res.status(500).json({ error: String(e.message || e) });
-  }
-});
+// (debug route removed)
 
 // ===== SPA fallback =====
 app.get('*', (req, res) => {

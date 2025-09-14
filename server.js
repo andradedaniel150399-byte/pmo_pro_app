@@ -63,11 +63,52 @@ app.get('/', (_req, res) => res.sendFile(path.join(FRONT_DIR, 'index.html')));
 // Health
 app.get('/api', (_req, res) => res.json({ ok: true, service: 'PMO Pro API' }));
 
+// ===== Configurações simples (chave/valor) =====
+app.get('/api/settings', async (_req, res) => {
+  try {
+    const { data, error } = await supabase.from('settings').select('key,value');
+    if (error) throw error;
+    const out = {};
+    (data || []).forEach(r => { out[r.key] = r.value; });
+    res.json(out);
+  } catch (e) {
+    console.error('[settings:get]', e);
+    res.status(500).json({ error: String(e.message || e) });
+  }
+});
+
+app.post('/api/settings', async (req, res) => {
+  try {
+    const entries = Object.entries(req.body || {}).map(([key, value]) => ({ key, value }));
+    if (entries.length === 0) return res.status(400).json({ error: 'Nenhuma configuração enviada' });
+    const { error } = await supabase.from('settings').upsert(entries);
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[settings:post]', e);
+    res.status(500).json({ error: String(e.message || e) });
+  }
+});
+
 // ===== Pipefy: inspecionar campos =====
 app.get('/api/inspect/fields', async (req, res) => {
   try {
-    const pipeId = req.query.pipeId || PIPEFY_PIPE_IDS[0];
-    if (!PIPEFY_TOKEN || !pipeId) {
+    let pipeId = req.query.pipeId || PIPEFY_PIPE_IDS[0];
+    let token = PIPEFY_TOKEN;
+    if (!token || !pipeId) {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('key,value')
+        .in('key', ['pipefyApiKey', 'pipefyPipeId']);
+      if (error) throw error;
+      const cfg = {};
+      (data || []).forEach(r => { cfg[r.key] = r.value; });
+      token = token || cfg.pipefyApiKey;
+      if (!pipeId && cfg.pipefyPipeId) {
+        pipeId = cfg.pipefyPipeId.split(',').map(s => s.trim()).filter(Boolean)[0];
+      }
+    }
+    if (!token || !pipeId) {
       return res.status(400).json({ error: 'Configure PIPEFY_TOKEN e PIPEFY_PIPE_IDS' });
     }
     const url = 'https://api.pipefy.com/graphql';
@@ -80,7 +121,7 @@ app.get('/api/inspect/fields', async (req, res) => {
     }`;
     const r = await fetch(url, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${PIPEFY_TOKEN}`, 'Content-Type': 'application/json' },
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ query, variables: { id: pipeId } })
     });
     if (!r.ok) throw new Error('Pipefy request failed ' + r.status);
@@ -99,12 +140,29 @@ app.get('/api/inspect/fields', async (req, res) => {
 // ===== Pipefy: sincronizar para projects =====
 app.post('/api/sync/pipefy', async (_req, res) => {
   try {
-    if (!PIPEFY_TOKEN || PIPEFY_PIPE_IDS.length === 0) {
+    let token = PIPEFY_TOKEN;
+    let pipeIds = [...PIPEFY_PIPE_IDS];
+    if (!token || pipeIds.length === 0) {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('key,value')
+        .in('key', ['pipefyApiKey', 'pipefyPipeId']);
+      if (error) throw error;
+      const cfg = {};
+      (data || []).forEach(r => { cfg[r.key] = r.value; });
+      token = token || cfg.pipefyApiKey;
+      if (pipeIds.length === 0 && cfg.pipefyPipeId) {
+        pipeIds = cfg.pipefyPipeId.split(',').map(s => s.trim()).filter(Boolean);
+      }
+    }
+
+    if (!token || pipeIds.length === 0) {
       return res.status(400).json({ error: 'Configure PIPEFY_TOKEN e PIPEFY_PIPE_IDS' });
     }
+
     let upserts = 0;
-    for (const pipeId of PIPEFY_PIPE_IDS) {
-      const entries = await fetchPipeProjects(pipeId);
+    for (const pipeId of pipeIds) {
+      const entries = await fetchPipeProjects(pipeId, token);
       if (entries.length === 0) continue;
       const { error } = await supabase.from('projects').upsert(entries, { onConflict: 'external_id' });
       if (error) throw error;
@@ -311,9 +369,9 @@ app.post('/api/allocations/cleanup', async (req, res) => {
 });
 
 // ===== Helpers do Pipefy (sem createdAt/updatedAt do schema) =====
-async function fetchPipeProjects(pipeId) {
+async function fetchPipeProjects(pipeId, token = PIPEFY_TOKEN) {
   const url = 'https://api.pipefy.com/graphql';
-  const headers = { 'Authorization': `Bearer ${PIPEFY_TOKEN}`, 'Content-Type': 'application/json' };
+  const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
   // allCards (API nova)
   let query = `query($pipeId:ID!){

@@ -64,39 +64,47 @@ async function loadTeam() {
   }
 }
 
-// Carrega configurações de integração do localStorage
-function loadIntegration() {
-  document.getElementById('pipefyApiKey').value = localStorage.getItem('pipefyApiKey') || '';
-  document.getElementById('pipefyPipeId').value = localStorage.getItem('pipefyPipeId') || '';
-  document.getElementById('serviceCodes').value = localStorage.getItem('serviceCodes') || '';
-}
-
-function saveIntegration() {
-  localStorage.setItem('pipefyApiKey', document.getElementById('pipefyApiKey').value.trim());
-  localStorage.setItem('pipefyPipeId', document.getElementById('pipefyPipeId').value.trim());
-  localStorage.setItem('serviceCodes', document.getElementById('serviceCodes').value.trim());
-}
-
-// Botão Salvar e Sincronizar
-async function handlePipefySync() {
-  const btn = document.getElementById('btnSaveSync');
+// Carrega configurações de integração do backend
+async function loadIntegration() {
   try {
-    btn.disabled = true;
-    const r = await fetch('/api/sync/pipefy', { method: 'POST', cache: 'no-store' });
-    const j = await r.json();
+    const r = await fetch('/api/settings');
+    const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || 'erro');
-    alert(`Sincronizado: ${j.upserts ?? 0} projeto(s)`);
+    document.getElementById('pipefyApiKey').value = j.pipefyApiKey || '';
+    document.getElementById('pipefyPipeId').value = j.pipefyPipeId || '';
+    document.getElementById('serviceCodes').value = j.serviceCodes || '';
   } catch (e) {
-    alert('Erro: ' + e.message);
-  } finally {
-    btn.disabled = false;
+    console.error('loadIntegration', e);
   }
 }
-window.handlePipefySync = handlePipefySync;
+
+async function saveIntegration() {
+  const body = {
+    pipefyApiKey: document.getElementById('pipefyApiKey').value.trim(),
+    pipefyPipeId: document.getElementById('pipefyPipeId').value.trim(),
+    serviceCodes: document.getElementById('serviceCodes').value.trim()
+  };
+  try {
+    const r = await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'erro');
+  } catch (e) {
+    alert('Erro ao salvar: ' + e.message);
+    throw e;
+  }
+}
 
 document.getElementById('btnSaveSync').addEventListener('click', async () => {
-  saveIntegration();
-  await handlePipefySync();
+  try {
+    await saveIntegration();
+    await window.handlePipefySync?.();
+  } catch (e) {
+    console.error(e);
+  }
 });
 
 // Inicialização

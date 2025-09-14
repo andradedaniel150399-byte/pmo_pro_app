@@ -32,6 +32,13 @@ create table if not exists allocations (
   created_at timestamptz default now()
 );
 
+-- Tabela de configurações simples (chave/valor)
+create table if not exists settings (
+  key text primary key,
+  value text,
+  updated_at timestamptz default now()
+);
+
 -- View de alocações com nomes de projeto e profissional
 create or replace view allocations_view as
 select

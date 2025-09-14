@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await startSession(email, password);
         window.location.replace('app.html');
       } catch (error) {
-        authMsg.textContent = 'Erro no login: ' + error.message;
+        authMsg.textContent = 'Erro no login: ' + (error?.message || String(error));
       }
     }
   });
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
     authMsg.textContent = '';
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/app.html' }
+      options: { redirectTo: window.location.origin + '/' }
     });
     if (error) {
       authMsg.textContent = (mode === 'signup' ? 'Erro no cadastro: ' : 'Erro no login: ') + error.message;
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   supabase.auth.onAuthStateChange(async (_event, session) => {
-    if (session && isOn('index.html')) window.location.replace('app.html');
+    if (session && isOn('index.html')) window.location.replace('/');
   });
 });
 

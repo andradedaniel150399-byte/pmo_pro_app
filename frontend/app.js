@@ -1,14 +1,26 @@
 // Estado global simples da aplicação
-const state = {
+const state = (window.state = window.state || {
   theme: localStorage.getItem('theme') || 'light',
+  // manter nomenclatura compatível com o UI existente
   currentUser: null,
-  data: {
+  db: {
     projects: [],
     professionals: [],
-    allocations: []
+    allocations: [],
+    overview: null,
+    timeseries: null
   }
-};
+});
+
 window.state = state;
+
+// Pequeno utilitário para fetch + JSON e tratamento de erros
+async function fetchJSON(url) {
+  const r = await fetch(url);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || r.statusText);
+  return data;
+}
 
 // Alterna visualizações principais (tabs)
 function switchView(viewId) {
@@ -46,22 +58,22 @@ function updateUserUI() {
 window.updateUserUI = updateUserUI;
 
 // Carrega lista de projetos (aba Projetos) e preenche selects usados nas alocações
-async function loadProjects() {
+async function loadProjects(force = false) {
   try {
-    const r = await fetch('/api/metrics/top-projects?limit=999'); // pega ids e nomes (reuso)
-    const j = await r.json();
-    if (!r.ok) throw new Error(j.error || 'erro');
+    if (force || !state.db.projects.length) {
+      const j = await fetchJSON('/api/metrics/top-projects?limit=999');
+      state.db.projects = j.items || [];
+    }
 
-    // Se você quiser todos, troque por uma rota que liste /api/projects (você pode criar depois)
-    // Aqui, para simplificar, uso os "top projects" só para preencher a tabela e selects.
     const tbody = document.getElementById('projects-tbody');
     const selCreate = document.getElementById('alloc-project');
     const selFilter = document.getElementById('filter-project');
+    if (!tbody || !selCreate) return;
     tbody.innerHTML = '';
     selCreate.innerHTML = '';
     if (selFilter) selFilter.innerHTML = '<option value="">Todos</option>';
 
-    (j.items || []).forEach(p => {
+    (state.db.projects || []).forEach(p => {
       // tabela
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -82,23 +94,25 @@ async function loadProjects() {
     });
   } catch (e) {
     console.error('loadProjects', e);
+    showNotification('Erro ao carregar projetos', 'error');
   }
 }
 
-async function loadProfessionals() {
+async function loadProfessionals(force = false) {
   try {
-    const r = await fetch('/api/professionals');
-    const j = await r.json();
-    if (!r.ok) throw new Error(j.error || 'erro');
+    if (force || !state.db.professionals.length) {
+      state.db.professionals = await fetchJSON('/api/professionals');
+    }
 
     const tbody = document.getElementById('professionals-tbody');
     const selCreate = document.getElementById('alloc-prof');
     const selFilter = document.getElementById('filter-prof');
+    if (!tbody || !selCreate) return;
     tbody.innerHTML = '';
     selCreate.innerHTML = '';
     if (selFilter) selFilter.innerHTML = '<option value="">Todos</option>';
 
-    (j || []).forEach(p => {
+    (state.db.professionals || []).forEach(p => {
       const tr = document.createElement('tr');
       tr.innerHTML = `<td class="py-2 pr-4">${p.name}</td><td class="py-2 pr-4">${p.email ?? '-'}</td><td class="py-2">${p.role ?? '-'}</td>`;
       tbody.appendChild(tr);
@@ -111,6 +125,7 @@ async function loadProfessionals() {
     });
   } catch (e) {
     console.error('loadProfessionals', e);
+    showNotification('Erro ao carregar profissionais', 'error');
   }
 }
 
@@ -130,7 +145,8 @@ async function addProfessional() {
     document.getElementById('prof-name').value = '';
     document.getElementById('prof-email').value = '';
     document.getElementById('prof-role').value = '';
-    await loadProfessionals();
+    state.db.professionals = []; // força recarga
+    await loadProfessionals(true);
     alert('Profissional adicionado!');
   } catch (e) {
     alert('Erro: ' + e.message);
@@ -139,6 +155,33 @@ async function addProfessional() {
 
 // expõe para o dashboard.js poder recarregar junto após sync
 window.loadProjects = loadProjects;
+
+async function init() {
+  const endpoints = [
+    ['overview', '/api/metrics/overview'],
+    ['timeseries', '/api/metrics/timeseries?days=30'],
+    ['projects', '/api/metrics/top-projects?limit=999'],
+    ['professionals', '/api/professionals'],
+    ['allocations', '/api/allocations']
+  ];
+
+  const results = await Promise.allSettled(endpoints.map(([, url]) => fetchJSON(url)));
+  results.forEach((res, i) => {
+    const key = endpoints[i][0];
+    if (res.status === 'fulfilled') {
+      const data = res.value;
+      if (key === 'projects') state.db.projects = data.items || [];
+      else state.db[key] = data;
+    } else {
+      showNotification(`Erro ao carregar ${key}`, 'error');
+    }
+  });
+
+  await loadProjects();
+  await loadProfessionals();
+  if (window.renderProfitability) window.renderProfitability();
+  if (window.PMODashboard?.renderDashboard) window.PMODashboard.renderDashboard();
+}
 
 // Navegação por hash para permitir links diretos para abas
 document.addEventListener('DOMContentLoaded', () => {
@@ -167,4 +210,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const initial = location.hash.slice(1) || 'tab-dashboard';
   switchView(initial);
+  init();
 });

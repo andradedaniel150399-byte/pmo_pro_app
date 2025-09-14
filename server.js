@@ -111,6 +111,14 @@ app.post('/api/sync/pipefy', async (_req, res) => {
     for (const pipeId of PIPEFY_PIPE_IDS) {
       const entries = await fetchPipeProjects(pipeId);
       if (entries.length === 0) continue;
+      // Debug: log keys present in the first entry to aid debugging on deployed envs
+      try {
+        if (entries && entries.length) {
+          console.log('[sync/pipefy] sample entry keys:', Object.keys(entries[0]));
+        }
+      } catch (e) {
+        console.log('[sync/pipefy] failed to log entry keys', e);
+      }
       const { error } = await supabase.from('projects').upsert(entries, { onConflict: 'external_id' });
       if (error) throw error;
       upserts += entries.length;

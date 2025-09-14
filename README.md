@@ -68,4 +68,23 @@ Rotas:
 
 ### Frontend
 
+## Migração: colunas Pipefy (projects)
+
+Se você já tem uma instância do banco, aplique a migration que adiciona colunas tipadas para os campos do Pipefy na tabela `projects`. O arquivo com o SQL está em `db/migrations/001_add_pipefy_columns.sql`.
+
+Passos rápidos:
+
+- Pelo painel do Supabase: abra o projeto → SQL Editor → cole o conteúdo de `db/migrations/001_add_pipefy_columns.sql` → Run.
+- Via supabase CLI:
+   ```bash
+   supabase db query < db/migrations/001_add_pipefy_columns.sql
+   ```
+- Via psql (conexão direta):
+   ```bash
+   psql "postgresql://<db_user>:<db_pass>@<db_host>:5432/<db_name>" -f db/migrations/001_add_pipefy_columns.sql
+   ```
+
+Depois de aplicar, rode `POST /api/sync/pipefy` para popular/atualizar os campos `pipefy_*`.
+
+
 O `dashboard.js` agora centraliza os botões de sincronização e logout. A função `handleLogout` está disponível em `ui.js` para que qualquer página possa encerrar a sessão.

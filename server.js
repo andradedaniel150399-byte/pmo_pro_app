@@ -430,6 +430,4 @@ app.get('*', (req, res) => {
 
 // Bind explicitly to all IPv4 interfaces to avoid local "connection refused" issues
 // on systems where localhost resolves differently.
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`PMO Pro listening on http://localhost:${PORT}`);
-});
+app.listen(PORT, '0.0.0.0');

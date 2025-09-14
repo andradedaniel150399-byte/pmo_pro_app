@@ -3,5 +3,24 @@ services:
   name: pmo-pro-unified
   env: node
   buildCommand: "npm install"
-  startCommand: "node server.js"
+  startCommand: "npm start"
   plan: free
+  envVars:
+    - key: SUPABASE_URL
+      sync: false
+    - key: SUPABASE_SERVICE_KEY
+      sync: false
+    - key: SUPABASE_ANON_KEY
+      sync: false
+    - key: PIPEFY_TOKEN
+      sync: false
+    - key: PIPEFY_PIPE_IDS
+      sync: false
+    - key: PIPEFY_STATUS_FIELD
+      sync: false
+    - key: PIPEFY_OWNER_EMAIL_FIELD
+      sync: false
+    - key: GEMINI_API_KEY
+      sync: false
+    - key: PORT
+      value: 3000

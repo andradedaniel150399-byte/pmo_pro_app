@@ -6,22 +6,18 @@ document.addEventListener('DOMContentLoaded', () => {
   nav.className = 'bg-indigo-600 text-white';
   nav.innerHTML = `
     <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-      <a href="/app.html" class="font-semibold text-lg">PMO Pro</a>
+      <a href="/" class="font-semibold text-lg">PMO Pro</a>
       <button id="nav-toggle" class="md:hidden">☰</button>
       <div id="nav-links" class="hidden md:flex md:items-center md:gap-4">
-        <a href="/app.html#tab-dashboard" class="nav-link hover:underline">Dashboard</a>
-        <a href="/app.html#tab-projects" class="nav-link hover:underline">Projetos</a>
-        <a href="/app.html#tab-kanban" class="nav-link hover:underline">Kanban</a>
-        <a href="/dashboard.html" class="nav-link hover:underline">Relatórios</a>
-        <a href="/settings.html" class="nav-link hover:underline">Configurações</a>
+        <a href="/#tab-dashboard" class="nav-link hover:underline">Dashboard</a>
+        <a href="/#tab-projects" class="nav-link hover:underline">Projetos</a>
+        <a href="/#tab-kanban" class="nav-link hover:underline">Kanban</a>
       </div>
     </div>
     <div id="nav-mobile" class="md:hidden hidden px-4 pb-4 flex flex-col gap-2 bg-indigo-600">
-      <a href="/app.html#tab-dashboard" class="nav-link">Dashboard</a>
-      <a href="/app.html#tab-projects" class="nav-link">Projetos</a>
-      <a href="/app.html#tab-kanban" class="nav-link">Kanban</a>
-      <a href="/dashboard.html" class="nav-link">Relatórios</a>
-      <a href="/settings.html" class="nav-link">Configurações</a>
+      <a href="/#tab-dashboard" class="nav-link">Dashboard</a>
+      <a href="/#tab-projects" class="nav-link">Projetos</a>
+      <a href="/#tab-kanban" class="nav-link">Kanban</a>
     </div>
   `;
   document.body.prepend(nav);

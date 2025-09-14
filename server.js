@@ -283,33 +283,25 @@ app.get('/api/allocations', async (req, res) => {
   }
 });
 
-app.post('/api/allocations', async (req, res) => {
-  const { project_id, professional_id, hours, start_date, end_date } = req.body || {};
-  if (!project_id || !professional_id) {
-    return res.status(400).json({ error: 'project_id e professional_id são obrigatórios' });
-  }
-  const { data, error } = await supabase
-    .from('allocations')
-    .insert([{ project_id, professional_id, hours, start_date, end_date }])
-    .select('*')
-    .single();
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
-});
-
 app.post('/api/allocations/cleanup', async (req, res) => {
   try {
     const { month, professional_id, project_id } = req.body || {};
+    // Evita deleções amplas sem filtros (segurança)
+    if (!month && !professional_id && !project_id) {
+      return res.status(400).json({ error: 'Informe ao menos um filtro' });
+    }
 
     let query = supabase.from('allocations').delete();
 
     if (month) {
+      // month esperado no formato YYYY-MM
       const start = `${month}-01`;
       const endDate = new Date(start);
       endDate.setMonth(endDate.getMonth() + 1);
       const end = endDate.toISOString().slice(0, 10);
       query = query.gte('start_date', start).lt('start_date', end);
     }
+
     if (professional_id) query = query.eq('professional_id', professional_id);
     if (project_id) query = query.eq('project_id', project_id);
 

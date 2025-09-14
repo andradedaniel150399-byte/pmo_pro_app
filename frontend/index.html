@@ -6,6 +6,12 @@
   <title>PMO Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="/landing.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="/env.js" defer></script>
+  <script src="/supabase-client.js" defer></script>
+  <script src="/ui.js" defer></script>
+  <script src="/auth.js" defer></script>
   <!-- Chart.js para gráficos -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <!-- SortableJS para o Kanban -->
@@ -224,7 +230,7 @@
       </div>
     </section>
   </main>
-
+  <footer class="text-center py-4 text-xs text-gray-500">© 2024 PMO Pro</footer>
   <div id="notification-container"></div>
   <div id="confirmation-modal" class="hidden">
     <div class="modal-box">
@@ -235,7 +241,6 @@
       </div>
     </div>
   </div>
-
   <script src="/navbar.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/env.js" defer></script>

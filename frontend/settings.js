@@ -11,8 +11,10 @@ function initTabs() {
         p.classList.remove('block');
       });
       const el = document.getElementById(target);
-      el.classList.remove('hidden');
-      el.classList.add('block');
+      if (el) {
+        el.classList.remove('hidden');
+        el.classList.add('block');
+      }
     });
   });
 }
@@ -23,10 +25,12 @@ async function loadTeam() {
     const r = await fetch('/api/professionals');
     const list = await r.json();
     const container = document.getElementById('team-list');
+    if (!container) return;
     container.innerHTML = '';
     (list || []).forEach(p => {
       const row = document.createElement('div');
       row.className = 'flex gap-2 items-center';
+
       const nameInput = document.createElement('input');
       nameInput.className = 'input flex-1';
       nameInput.value = p.name || '';
@@ -66,22 +70,28 @@ async function loadTeam() {
 
 // Carrega configurações de integração do localStorage
 function loadIntegration() {
-  document.getElementById('pipefyApiKey').value = localStorage.getItem('pipefyApiKey') || '';
-  document.getElementById('pipefyPipeId').value = localStorage.getItem('pipefyPipeId') || '';
-  document.getElementById('serviceCodes').value = localStorage.getItem('serviceCodes') || '';
+  const apiEl = document.getElementById('pipefyApiKey');
+  const pipeEl = document.getElementById('pipefyPipeId');
+  const svcEl = document.getElementById('serviceCodes');
+  if (apiEl) apiEl.value = localStorage.getItem('pipefyApiKey') || '';
+  if (pipeEl) pipeEl.value = localStorage.getItem('pipefyPipeId') || '';
+  if (svcEl) svcEl.value = localStorage.getItem('serviceCodes') || '';
 }
 
 function saveIntegration() {
-  localStorage.setItem('pipefyApiKey', document.getElementById('pipefyApiKey').value.trim());
-  localStorage.setItem('pipefyPipeId', document.getElementById('pipefyPipeId').value.trim());
-  localStorage.setItem('serviceCodes', document.getElementById('serviceCodes').value.trim());
+  const apiEl = document.getElementById('pipefyApiKey');
+  const pipeEl = document.getElementById('pipefyPipeId');
+  const svcEl = document.getElementById('serviceCodes');
+  if (apiEl) localStorage.setItem('pipefyApiKey', apiEl.value.trim());
+  if (pipeEl) localStorage.setItem('pipefyPipeId', pipeEl.value.trim());
+  if (svcEl) localStorage.setItem('serviceCodes', svcEl.value.trim());
 }
 
 // Botão Salvar e Sincronizar
 async function handlePipefySync() {
   const btn = document.getElementById('btnSaveSync');
   try {
-    btn.disabled = true;
+    if (btn) btn.disabled = true;
     const r = await fetch('/api/sync/pipefy', { method: 'POST', cache: 'no-store' });
     const j = await r.json();
     if (!r.ok) throw new Error(j.error || 'erro');
@@ -89,17 +99,21 @@ async function handlePipefySync() {
   } catch (e) {
     alert('Erro: ' + e.message);
   } finally {
-    btn.disabled = false;
+    if (btn) btn.disabled = false;
   }
 }
 window.handlePipefySync = handlePipefySync;
 
-document.getElementById('btnSaveSync').addEventListener('click', async () => {
-  saveIntegration();
-  await handlePipefySync();
-});
+document.addEventListener('DOMContentLoaded', () => {
+  initTabs();
+  loadTeam();
+  loadIntegration();
 
-// Inicialização
-initTabs();
-loadTeam();
-loadIntegration();
+  const btnSaveSync = document.getElementById('btnSaveSync');
+  if (btnSaveSync) {
+    btnSaveSync.addEventListener('click', async () => {
+      saveIntegration();
+      await handlePipefySync();
+    });
+  }
+});

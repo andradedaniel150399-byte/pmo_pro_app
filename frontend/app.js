@@ -151,6 +151,75 @@ async function addProfessional() {
   }
 }
 
+// --- autenticação/demo ---
+let currentUser = null;
+
+function loadUser() {
+  try {
+    currentUser = JSON.parse(localStorage.getItem('demoUser') || 'null');
+  } catch {
+    currentUser = null;
+  }
+}
+
+function handleLogin() {
+  currentUser = {
+    name: 'Usuário Demo',
+    avatar: `https://i.pravatar.cc/40?u=demo`
+  };
+  localStorage.setItem('demoUser', JSON.stringify(currentUser));
+  showNotification(`Bem-vindo, ${currentUser.name}!`, 'success');
+  renderAuthUI();
+}
+
+function renderAuthUI() {
+  const avatarEl = document.getElementById('user-avatar');
+  const nameEl = document.getElementById('user-name');
+  const userInfo = document.getElementById('user-info');
+  const btnLogin = document.getElementById('btnLogin');
+  const btnLogout = document.getElementById('btnLogout');
+  const btnSync = document.getElementById('btnSync');
+  const btnTheme = document.getElementById('btnTheme');
+  const btnPersonalize = document.getElementById('btnPersonalize');
+
+  if (currentUser?.name) {
+    if (avatarEl) avatarEl.src = currentUser.avatar;
+    if (nameEl) nameEl.textContent = currentUser.name;
+    userInfo?.classList.remove('hidden');
+    btnLogin?.classList.add('hidden');
+    btnLogout?.classList.remove('hidden');
+    btnSync?.classList.remove('hidden');
+    btnTheme?.classList.remove('hidden');
+    btnPersonalize?.classList.remove('hidden');
+  } else {
+    userInfo?.classList.add('hidden');
+    btnLogin?.classList.remove('hidden');
+    btnLogout?.classList.add('hidden');
+    btnSync?.classList.add('hidden');
+    btnTheme?.classList.add('hidden');
+    btnPersonalize?.classList.add('hidden');
+  }
+}
+
+// --- eventos ---
+document.getElementById('btnAddProf')?.addEventListener('click', addProfessional);
+document.getElementById('btnLogin')?.addEventListener('click', handleLogin);
+document.getElementById('btnPersonalize')?.addEventListener('click', () => {
+  location.href = '/settings.html';
+});
+document.getElementById('btnTheme')?.addEventListener('click', () => {
+  const html = document.documentElement;
+  html.classList.toggle('dark');
+  localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+});
+
+// carrega listas e estado ao abrir
+loadUser();
+renderAuthUI();
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme) document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+loadProjects();
+loadProfessionals();
 // expõe para o dashboard.js poder recarregar junto após sync
 window.loadProjects = loadProjects;
 

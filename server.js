@@ -252,6 +252,12 @@ app.get('/api/professionals', async (_req, res) => {
 app.post('/api/professionals', async (req, res) => {
   const { name, email, role, hourly_rate } = req.body || {};
   if (!name) return res.status(400).json({ error: 'name obrigatório' });
+  // If in MOCK_DEV, return a fake created object so UI can be tested without a real DB
+  if (MOCK_DEV) {
+    const now = new Date().toISOString();
+    return res.json({ id: `mock-${Date.now()}`, name, email, role, hourly_rate: hourly_rate ?? null, created_at: now });
+  }
+
   const insertRow = { name, email, role };
   if (hourly_rate !== undefined) insertRow.hourly_rate = hourly_rate;
   const { data, error } = await supabase

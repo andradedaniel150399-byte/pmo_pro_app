@@ -131,6 +131,8 @@ async function addProfessional() {
   const name = document.getElementById('prof-name').value.trim();
   const email = document.getElementById('prof-email').value.trim();
   const role = document.getElementById('prof-role').value.trim();
+  const hourly_rate_raw = document.getElementById('prof-hourly-rate')?.value?.trim();
+  const hourly_rate = hourly_rate_raw ? Number(String(hourly_rate_raw).replace(',', '.')) : undefined;
   if (!name) return alert('Informe o nome');
 
   try {
@@ -143,6 +145,7 @@ async function addProfessional() {
     document.getElementById('prof-name').value = '';
     document.getElementById('prof-email').value = '';
     document.getElementById('prof-role').value = '';
+    if (document.getElementById('prof-hourly-rate')) document.getElementById('prof-hourly-rate').value = '';
     state.db.professionals = []; // força recarga
     await loadProfessionals(true);
     alert('Profissional adicionado!');
@@ -278,6 +281,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const initial = location.hash.slice(1) || 'tab-dashboard';
   switchView(initial);
   init();
+
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => { const view = btn.dataset.tab; switchView(view); location.hash = view; }));

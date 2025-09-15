@@ -250,11 +250,13 @@ app.get('/api/professionals', async (_req, res) => {
 });
 
 app.post('/api/professionals', async (req, res) => {
-  const { name, email, role } = req.body || {};
+  const { name, email, role, hourly_rate } = req.body || {};
   if (!name) return res.status(400).json({ error: 'name obrigatório' });
+  const insertRow = { name, email, role };
+  if (hourly_rate !== undefined) insertRow.hourly_rate = hourly_rate;
   const { data, error } = await supabase
     .from('professionals')
-    .insert([{ name, email, role }])
+    .insert([insertRow])
     .select('*')
     .single();
   if (error) return res.status(500).json({ error: error.message });

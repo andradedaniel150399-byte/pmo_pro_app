@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR" class="dark">
 
 <head>
   <meta charset="utf-8" />
@@ -7,237 +7,1463 @@
   <title>PMO Pro — Painel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            'sans': ['Inter', 'ui-sans-serif', 'system-ui'],
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    :root { --bg: #0f172a; --panel: #0b1220; --muted: #94a3b8; --accent: #7c3aed; }
-    html,body,#root{height:100%}
-    body{font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:linear-gradient(180deg,#071128 0%,#07121a 100%); color:#e6eef8}
-    .card{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)); border:1px solid rgba(255,255,255,0.04); border-radius:12px; padding:1rem}
-    .muted{color:var(--muted)}
-    .accent{color:var(--accent)}
-    .btn{background:linear-gradient(90deg,#6d28d9,#a78bfa); color:white; padding:0.5rem 0.75rem; border-radius:8px}
-    .ghost{background:transparent; border:1px solid rgba(255,255,255,0.04); padding:0.4rem 0.6rem; border-radius:8px}
-    .small{font-size:0.85rem}
-    .sidebar{width:260px}
-    .scroll-y{max-height:60vh; overflow:auto}
+    body { font-family: 'Inter', sans-serif; }
+    .tab-active { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 15px 0 rgba(102, 126, 234, 0.3);
+    }
+    .card-gradient {
+      background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .metric-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .sidebar-nav {
+      transition: all 0.2s ease;
+    }
+    .sidebar-nav:hover {
+      background: rgba(255,255,255,0.1);
+      transform: translateX(4px);
+    }
+    .tab-panel {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 
-<body>
-  <div id="root" class="h-full grid grid-cols-[260px_1fr] gap-6 p-6">
-    <aside class="sidebar">
-      <div class="mb-6">
-        <h1 class="text-2xl font-bold">PMO Pro</h1>
-        <p class="muted small">Visão geral & controle</p>
-      </div>
-      <nav class="space-y-2">
-        <button class="w-full text-left p-3 card" id="nav-dashboard">Dashboard</button>
-        <button class="w-full text-left p-3 card" id="nav-projects">Projetos</button>
-        <button class="w-full text-left p-3 card" id="nav-allocations">Alocações</button>
-        <button class="w-full text-left p-3 card" id="nav-kanban">Kanban</button>
-        <button class="w-full text-left p-3 card" id="nav-settings">Configurações</button>
-      </nav>
-      <div class="mt-6">
-        <button class="btn" id="btn-sync">Sincronizar Pipefy</button>
-        <div class="mt-3">
-          <button id="btn-add-prof" class="ghost" style="width:100%">➕ Adicionar Profissional</button>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+  <div class="flex h-screen bg-gray-900">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gray-800 shadow-xl">
+      <div class="p-6">
+        <div class="flex items-center space-x-3 mb-8">
+          <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <span class="text-white font-bold text-lg">P</span>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-white">PMO Pro</h1>
+            <p class="text-gray-400 text-sm">Gestão de Projetos</p>
+          </div>
+        </div>
+        
+        <nav class="space-y-2">
+          <button class="tab-btn sidebar-nav w-full text-left px-4 py-3 rounded-lg text-gray-300 hover:text-white transition-all" data-tab="tab-dashboard">
+            <i class="mr-3">📊</i> Dashboard
+          </button>
+          <button class="tab-btn sidebar-nav w-full text-left px-4 py-3 rounded-lg text-gray-300 hover:text-white transition-all" data-tab="tab-projects">
+            <i class="mr-3">📋</i> Projetos
+          </button>
+          <button class="tab-btn sidebar-nav w-full text-left px-4 py-3 rounded-lg text-gray-300 hover:text-white transition-all" data-tab="tab-allocations">
+            <i class="mr-3">👥</i> Alocações
+          </button>
+          <button class="tab-btn sidebar-nav w-full text-left px-4 py-3 rounded-lg text-gray-300 hover:text-white transition-all" data-tab="tab-professionals">
+            <i class="mr-3">👤</i> Profissionais
+          </button>
+          <button class="tab-btn sidebar-nav w-full text-left px-4 py-3 rounded-lg text-gray-300 hover:text-white transition-all" data-tab="tab-kanban">
+            <i class="mr-3">📌</i> Kanban
+          </button>
+          <button class="tab-btn sidebar-nav w-full text-left px-4 py-3 rounded-lg text-gray-300 hover:text-white transition-all" data-tab="tab-settings">
+            <i class="mr-3">⚙️</i> Configurações
+          </button>
+        </nav>
+        
+        <div class="mt-8 space-y-3">
+          <button id="btn-sync" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all">
+            Sincronizar Pipefy
+          </button>
+          <button id="btn-open-modal" class="w-full border border-gray-600 text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-700 transition-all">
+            ➕ Adicionar Profissional
+          </button>
         </div>
       </div>
     </aside>
 
-    <main>
-      <header class="flex items-center justify-between mb-6">
-        <div>
-          <h2 id="page-title" class="text-xl font-semibold">Dashboard</h2>
-          <p class="muted small" id="page-sub">Resumo do projeto</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <button id="btn-sync" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-sm">Sincronizar Pipefy</button>
-          <div class="muted small">Ambiente: <span id="env-label">PROD</span></div>
-          <button class="ghost" id="btn-refresh">Atualizar</button>
-        </div>
-      </header>
+    <!-- Main Content -->
+    <main class="flex-1 overflow-hidden">
+      <div class="h-full overflow-y-auto p-6">
+        <!-- Dashboard Tab -->
+        <div id="tab-dashboard" class="tab-panel">
+          <div class="mb-6">
+            <h1 class="text-3xl font-bold text-white mb-2">Dashboard</h1>
+            <p class="text-gray-400">Visão geral dos seus projetos e métricas</p>
+          </div>
 
-      <section class="grid grid-cols-3 gap-6">
-        <div class="col-span-2 space-y-4">
-          <div class="card">
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="font-semibold">Visão geral</h3>
-              <div class="muted small">Últimas 24h</div>
+          <!-- Metrics Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="card-gradient rounded-xl p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-gray-400 text-sm font-medium">Projetos Ativos</p>
+                  <p id="active-count" class="text-2xl font-bold text-white mt-1">—</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <span class="text-white text-xl">📋</span>
+                </div>
+              </div>
+              <div class="mt-4">
+                <span class="text-green-400 text-sm font-medium">↗ +12%</span>
+                <span class="text-gray-400 text-sm ml-2">vs mês anterior</span>
+              </div>
             </div>
-      <canvas id="overviewChart" height="120"></canvas>
+
+            <div class="card-gradient rounded-xl p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-gray-400 text-sm font-medium">Horas Estimadas</p>
+                  <p id="est-hours" class="text-2xl font-bold text-white mt-1">—</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
+                  <span class="text-white text-xl">⏱️</span>
+                </div>
+              </div>
+              <div class="mt-4">
+                <span class="text-blue-400 text-sm font-medium">Total planejado</span>
+              </div>
+            </div>
+
+            <div class="card-gradient rounded-xl p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-gray-400 text-sm font-medium">Profissionais</p>
+                  <p id="professionals-count" class="text-2xl font-bold text-white mt-1">—</p>
+                </div>
+                <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                  <span class="text-white text-xl">👥</span>
+                </div>
+              </div>
+              <div class="mt-4">
+                <span class="text-gray-400 text-sm">Equipe ativa</span>
+              </div>
+            </div>
+
+            <div class="card-gradient rounded-xl p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-gray-400 text-sm font-medium">Utilização</p>
+                  <p id="utilization" class="text-2xl font-bold text-white mt-1">80%</p>
+                </div>
+                <div class="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center">
+                  <span class="text-white text-xl">📊</span>
+                </div>
+              </div>
+              <div class="mt-4">
+                <span class="text-yellow-400 text-sm font-medium">Capacidade média</span>
+              </div>
+            </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
-            <div class="card">
-              <h4 class="font-medium">Projetos ativos</h4>
-              <div id="active-count" class="text-2xl font-bold mt-2">—</div>
-              <div class="muted small mt-1">Total de projetos que estão em andamento</div>
+          <!-- Charts Section -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="card-gradient rounded-xl p-6">
+              <h3 class="text-lg font-semibold text-white mb-4">Visão Geral dos Projetos</h3>
+              <canvas id="overviewChart" height="200"></canvas>
             </div>
-            <div class="card">
-              <h4 class="font-medium">Horas estimadas</h4>
-              <div id="est-hours" class="text-2xl font-bold mt-2">—</div>
-              <div class="muted small mt-1">Soma das estimativas</div>
+            
+            <div class="card-gradient rounded-xl p-6">
+              <h3 class="text-lg font-semibold text-white mb-4">Top Projetos</h3>
+              <ul id="top-list" class="space-y-3 max-h-64 overflow-y-auto"></ul>
+            </div>
+          </div>
+
+          <!-- Recent Projects -->
+          <div class="card-gradient rounded-xl p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold text-white">Projetos Recentes</h3>
+              <button class="text-blue-400 hover:text-blue-300 text-sm font-medium">Ver todos</button>
+            </div>
+            <div id="projects-table" class="space-y-2"></div>
+          </div>
+        </div>
+        <!-- Projects Tab -->
+        <div id="tab-projects" class="tab-panel hidden">
+          <div class="mb-6">
+            <h1 class="text-3xl font-bold text-white mb-2">Projetos</h1>
+            <p class="text-gray-400">Gerencie todos os seus projetos em um só lugar</p>
+          </div>
+
+          <div class="card-gradient rounded-xl p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg font-semibold text-white">Lista de Projetos</h3>
+              <div class="flex gap-2">
+                <select id="filter-project" class="bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600">
+                  <option value="">Todos os projetos</option>
+                </select>
+                <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all">
+                  Novo Projeto
+                </button>
+              </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr class="border-b border-gray-600">
+                    <th class="text-left text-gray-400 font-medium py-3">Nome</th>
+                    <th class="text-left text-gray-400 font-medium py-3">Status</th>
+                    <th class="text-left text-gray-400 font-medium py-3">Responsável</th>
+                    <th class="text-left text-gray-400 font-medium py-3">Horas Est.</th>
+                    <th class="text-left text-gray-400 font-medium py-3">Criado</th>
+                  </tr>
+                </thead>
+                <tbody id="projects-tbody" class="text-gray-300">
+                  <!-- Projects will be loaded here -->
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
 
-        <aside class="space-y-4">
-          <div class="card">
-            <h4 class="font-medium">Top projetos</h4>
-            <ul id="top-list" class="mt-3 space-y-2 small muted scroll-y"></ul>
+        <!-- Allocations Tab -->
+        <div id="tab-allocations" class="tab-panel hidden">
+          <div class="mb-6">
+            <h1 class="text-3xl font-bold text-white mb-2">Alocações</h1>
+            <p class="text-gray-400">Gerencie a alocação de profissionais aos projetos</p>
           </div>
 
-          <div class="card">
-            <h4 class="font-medium">Status</h4>
-            <div id="status-breakdown" class="mt-3 small muted"></div>
+          <!-- Create Allocation Form -->
+          <div class="card-gradient rounded-xl p-6 mb-6">
+            <h3 class="text-lg font-semibold text-white mb-4">Nova Alocação</h3>
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <select id="alloc-project" class="bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600">
+                <option value="">Selecione o projeto</option>
+              </select>
+              <select id="alloc-prof" class="bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600">
+                <option value="">Selecione o profissional</option>
+              </select>
+              <input id="alloc-hours" type="number" placeholder="Horas" class="bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600">
+              <input id="alloc-start" type="date" class="bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600">
+              <input id="alloc-end" type="date" class="bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600">
+            </div>
+            <button id="btnCreateAlloc" class="mt-4 bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition-all">
+              Criar Alocação
+            </button>
           </div>
-        </aside>
-      </section>
 
-      <section class="mt-6 card">
-        <h3 class="font-semibold mb-3">Projetos</h3>
-        <div id="projects-table" class="space-y-2"></div>
-      </section>
+          <!-- Allocations List -->
+          <div class="card-gradient rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-white mb-4">Alocações Existentes</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr class="border-b border-gray-600">
+                    <th class="text-left text-gray-400 font-medium py-3">Projeto</th>
+                    <th class="text-left text-gray-400 font-medium py-3">Profissional</th>
+                    <th class="text-left text-gray-400 font-medium py-3">Horas</th>
+                    <th class="text-left text-gray-400 font-medium py-3">Período</th>
+                  </tr>
+                </thead>
+                <tbody id="allocations-tbody" class="text-gray-300">
+                  <!-- Allocations will be loaded here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Professionals Tab -->
+        <div id="tab-professionals" class="tab-panel hidden">
+          <div class="mb-6">
+            <h1 class="text-3xl font-bold text-white mb-2">Profissionais</h1>
+            <p class="text-gray-400">Gerencie a equipe de profissionais</p>
+          </div>
+
+          <div class="card-gradient rounded-xl p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg font-semibold text-white">Equipe</h3>
+              <button id="btn-open-modal" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all">
+                ➕ Adicionar Profissional
+              </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr class="border-b border-gray-600">
+                    <th class="text-left text-gray-400 font-medium py-3">Nome</th>
+                    <th class="text-left text-gray-400 font-medium py-3">Email</th>
+                    <th class="text-left text-gray-400 font-medium py-3">Função</th>
+                    <th class="text-left text-gray-400 font-medium py-3">Taxa/Hora</th>
+                  </tr>
+                </thead>
+                <tbody id="professionals-tbody" class="text-gray-300">
+                  <!-- Professionals will be loaded here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kanban Tab -->
+        <div id="tab-kanban" class="tab-panel hidden">
+          <div class="mb-6">
+            <h1 class="text-3xl font-bold text-white mb-2">Kanban</h1>
+            <p class="text-gray-400">Visualize o fluxo dos seus projetos</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="card-gradient rounded-xl p-4">
+              <h4 class="font-semibold text-white mb-4 flex items-center">
+                <span class="w-3 h-3 bg-gray-400 rounded-full mr-2"></span>
+                Backlog
+              </h4>
+              <div id="kanban-backlog" class="space-y-3 min-h-32">
+                <!-- Kanban cards will be loaded here -->
+              </div>
+            </div>
+
+            <div class="card-gradient rounded-xl p-4">
+              <h4 class="font-semibold text-white mb-4 flex items-center">
+                <span class="w-3 h-3 bg-blue-400 rounded-full mr-2"></span>
+                Em Progresso
+              </h4>
+              <div id="kanban-progress" class="space-y-3 min-h-32">
+                <!-- Kanban cards will be loaded here -->
+              </div>
+            </div>
+
+            <div class="card-gradient rounded-xl p-4">
+              <h4 class="font-semibold text-white mb-4 flex items-center">
+                <span class="w-3 h-3 bg-yellow-400 rounded-full mr-2"></span>
+                Revisão
+              </h4>
+              <div id="kanban-review" class="space-y-3 min-h-32">
+                <!-- Kanban cards will be loaded here -->
+              </div>
+            </div>
+
+            <div class="card-gradient rounded-xl p-4">
+              <h4 class="font-semibold text-white mb-4 flex items-center">
+                <span class="w-3 h-3 bg-green-400 rounded-full mr-2"></span>
+                Concluído
+              </h4>
+              <div id="kanban-done" class="space-y-3 min-h-32">
+                <!-- Kanban cards will be loaded here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="tab-settings" class="tab-panel hidden">
+          <div class="mb-6">
+            <h1 class="text-3xl font-bold text-white mb-2">Configurações</h1>
+            <p class="text-gray-400">Configure integrações, preferências e gerencie o sistema</p>
+          </div>
+
+          <!-- Settings Navigation -->
+          <div class="mb-6">
+            <div class="flex space-x-1 bg-gray-800 p-1 rounded-lg w-fit">
+              <button class="settings-tab-btn px-4 py-2 rounded-md text-sm font-medium text-white bg-blue-500" data-settings-tab="integration">
+                Integração
+              </button>
+              <button class="settings-tab-btn px-4 py-2 rounded-md text-sm font-medium text-gray-400 hover:text-white" data-settings-tab="preferences">
+                Preferências
+              </button>
+              <button class="settings-tab-btn px-4 py-2 rounded-md text-sm font-medium text-gray-400 hover:text-white" data-settings-tab="team">
+                Equipe
+              </button>
+              <button class="settings-tab-btn px-4 py-2 rounded-md text-sm font-medium text-gray-400 hover:text-white" data-settings-tab="advanced">
+                Avançado
+              </button>
+            </div>
+          </div>
+
+          <!-- Integration Settings -->
+          <div id="settings-integration" class="settings-panel">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Pipefy Integration -->
+              <div class="card-gradient rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                  <span class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center mr-3">🔗</span>
+                  Integração Pipefy
+                </h3>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-gray-400 text-sm font-medium mb-2">API Token *</label>
+                    <div class="relative">
+                      <input id="pipefyApiKey" type="password" placeholder="Seu token da API Pipefy" class="w-full bg-gray-700 text-white px-3 py-2 pr-10 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
+                      <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white" onclick="togglePassword('pipefyApiKey')">
+                        👁️
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-gray-400 text-sm font-medium mb-2">Pipe ID *</label>
+                    <input id="pipefyPipeId" type="text" placeholder="ID do pipe principal" class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-gray-400 text-sm font-medium mb-2">Códigos de Serviço</label>
+                    <textarea id="serviceCodes" placeholder="Códigos separados por vírgula" class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 h-20 resize-none focus:border-blue-500 focus:outline-none"></textarea>
+                    <small class="text-gray-500">Exemplo: DEV001, PROJ002, CONS003</small>
+                  </div>
+                  <div>
+                    <label class="block text-gray-400 text-sm font-medium mb-2">Intervalo de Sincronização (minutos)</label>
+                    <select id="syncInterval" class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
+                      <option value="15">15 minutos</option>
+                      <option value="30" selected>30 minutos</option>
+                      <option value="60">1 hora</option>
+                      <option value="120">2 horas</option>
+                      <option value="0">Manual apenas</option>
+                    </select>
+                  </div>
+                  <div class="flex space-x-3">
+                    <button id="btnSaveSync" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all">
+                      Salvar e Sincronizar
+                    </button>
+                    <button id="btnTestPipefy" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-all">
+                      Testar
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Connection Status -->
+              <div class="card-gradient rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-4">Status da Conexão</h3>
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                    <span class="text-gray-300">Pipefy API</span>
+                    <span id="pipefy-status" class="px-2 py-1 text-xs rounded-full bg-gray-600 text-gray-300">Não testado</span>
+                  </div>
+                  <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                    <span class="text-gray-300">Banco de Dados</span>
+                    <span class="px-2 py-1 text-xs rounded-full bg-green-600 text-white">Conectado</span>
+                  </div>
+                  <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                    <span class="text-gray-300">Última Sincronização</span>
+                    <span id="last-sync" class="text-sm text-gray-400">Nunca</span>
+                  </div>
+                  <button onclick="checkAllConnections()" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-all">
+                    Verificar Conexões
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Preferences Settings -->
+          <div id="settings-preferences" class="settings-panel hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- System Preferences -->
+              <div class="card-gradient rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                  <span class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center mr-3">⚙️</span>
+                  Preferências do Sistema
+                </h3>
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <span class="text-gray-300 font-medium">Tema Escuro</span>
+                      <p class="text-sm text-gray-500">Interface com cores escuras</p>
+                    </div>
+                    <button id="theme-toggle" class="bg-blue-500 w-12 h-6 rounded-full relative transition-all">
+                      <div class="toggle-slider w-5 h-5 bg-white rounded-full absolute top-0.5 translate-x-6 transition-transform"></div>
+                    </button>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <span class="text-gray-300 font-medium">Notificações</span>
+                      <p class="text-sm text-gray-500">Alertas e notificações do sistema</p>
+                    </div>
+                    <button id="notifications-toggle" class="bg-gray-600 w-12 h-6 rounded-full relative transition-all">
+                      <div class="toggle-slider w-5 h-5 bg-white rounded-full absolute top-0.5 translate-x-0 transition-transform"></div>
+                    </button>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <span class="text-gray-300 font-medium">Auto-sincronização</span>
+                      <p class="text-sm text-gray-500">Sincronizar automaticamente com Pipefy</p>
+                    </div>
+                    <button id="autosync-toggle" class="bg-blue-500 w-12 h-6 rounded-full relative transition-all">
+                      <div class="toggle-slider w-5 h-5 bg-white rounded-full absolute top-0.5 translate-x-6 transition-transform"></div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Regional Settings -->
+              <div class="card-gradient rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                  <span class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mr-3">🌍</span>
+                  Configurações Regionais
+                </h3>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-gray-400 text-sm font-medium mb-2">Idioma</label>
+                    <select id="language" class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
+                      <option value="pt-BR">Português (Brasil)</option>
+                      <option value="en-US">English (US)</option>
+                      <option value="es-ES">Español</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-gray-400 text-sm font-medium mb-2">Fuso Horário</label>
+                    <select id="timezone" class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
+                      <option value="America/Sao_Paulo">São Paulo (UTC-3)</option>
+                      <option value="America/New_York">New York (UTC-5)</option>
+                      <option value="Europe/London">London (UTC+0)</option>
+                      <option value="UTC">UTC</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-gray-400 text-sm font-medium mb-2">Formato de Data</label>
+                    <select class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600">
+                      <option value="dd/mm/yyyy">DD/MM/AAAA (brasileiro)</option>
+                      <option value="mm/dd/yyyy">MM/DD/AAAA (americano)</option>
+                      <option value="yyyy-mm-dd">AAAA-MM-DD (ISO)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Team Management -->
+          <div id="settings-team" class="settings-panel hidden">
+            <div class="card-gradient rounded-xl p-6">
+              <h3 class="text-lg font-semibold text-white mb-4 flex items-center justify-between">
+                <span class="flex items-center">
+                  <span class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center mr-3">👥</span>
+                  Gerenciamento de Equipe
+                </span>
+                <button id="btn-add-team-member" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all text-sm">
+                  ➕ Adicionar Membro
+                </button>
+              </h3>
+              <div id="team-list" class="space-y-3">
+                <!-- Team members will be loaded here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Advanced Settings -->
+          <div id="settings-advanced" class="settings-panel hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Data Management -->
+              <div class="card-gradient rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                  <span class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center mr-3">🗄️</span>
+                  Gerenciamento de Dados
+                </h3>
+                <div class="space-y-4">
+                  <button id="btnExportSettings" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-all">
+                    📥 Exportar Configurações
+                  </button>
+                  <button id="btnImportSettings" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all">
+                    📤 Importar Configurações
+                  </button>
+                  <hr class="border-gray-600">
+                  <button id="btnResetSettings" class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-all">
+                    🔄 Resetar Configurações
+                  </button>
+                </div>
+              </div>
+
+              <!-- System Information -->
+              <div class="card-gradient rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                  <span class="w-8 h-8 bg-gray-500 rounded-lg flex items-center justify-center mr-3">ℹ️</span>
+                  Informações do Sistema
+                </h3>
+                <div class="space-y-3">
+                  <div class="flex justify-between">
+                    <span class="text-gray-400">Versão:</span>
+                    <span class="text-white">1.0.0</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-400">Ambiente:</span>
+                    <span class="text-white">Desenvolvimento</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-400">Projetos:</span>
+                    <span id="projects-count" class="text-white">-</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-400">Profissionais:</span>
+                    <span id="professionals-count-settings" class="text-white">-</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-400">Alocações:</span>
+                    <span id="allocations-count" class="text-white">-</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
-
   <!-- Modal: Create Professional -->
-  <div id="modal-prof" class="hidden fixed inset-0 flex items-center justify-center bg-black/50">
-    <div class="bg-white text-slate-900 rounded-lg p-6 w-full max-w-md">
-      <h3 class="font-semibold mb-3">Adicionar Profissional</h3>
-      <div class="grid grid-cols-1 gap-3 mb-3">
-        <input id="modal-prof-name" class="input" placeholder="Nome" />
-        <input id="modal-prof-email" class="input" placeholder="Email" />
-        <input id="modal-prof-role" class="input" placeholder="Função / Role" />
-        <input id="modal-prof-hourly-rate" class="input" placeholder="Taxa por hora (ex: 120.00)" type="number" step="0.01" min="0" />
-        <div id="modal-prof-error" class="text-red-500 text-sm hidden"></div>
+  <div id="modal-prof" class="hidden fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+    <div class="bg-gray-800 text-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
+      <h3 class="text-xl font-semibold mb-4">Adicionar Profissional</h3>
+      <div class="space-y-4">
+        <input id="modal-prof-name" class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none" placeholder="Nome completo" />
+        <input id="modal-prof-email" class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none" placeholder="Email" type="email" />
+        <input id="modal-prof-role" class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none" placeholder="Função / Cargo" />
+        <input id="modal-prof-hourly" class="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none" placeholder="Taxa por hora (ex: 120.00)" type="number" step="0.01" min="0" />
+        <div id="modal-prof-error" class="text-red-400 text-sm hidden"></div>
       </div>
-      <div class="flex justify-end gap-2">
-        <button id="modal-prof-cancel" class="px-4 py-2 rounded bg-slate-200">Cancelar</button>
-        <button id="modal-prof-submit" class="px-4 py-2 rounded bg-indigo-600 text-white">Adicionar</button>
+      <div class="flex justify-end gap-3 mt-6">
+        <button id="modal-prof-cancel" class="px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-500 transition-all">Cancelar</button>
+        <button id="modal-prof-submit" class="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 transition-all">Adicionar</button>
       </div>
     </div>
   </div>
 
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+  <script src="/env.js"></script>
+  <script src="api.js"></script>
+  <script src="ui.js"></script>
+  <script src="app.js"></script>
+  <script src="professionals.js"></script>
+  <script src="allocations.js"></script>
+  <script src="settings.js"></script>
+
   <script>
-    // Simple SPA wiring to existing backend endpoints
-    const api = {
-      get: (path)=>fetch('/api'+path).then(r=>r.json()),
-      post: (path, body)=>fetch('/api'+path, {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body)}).then(r=>r.json())
+    // Tab navigation system
+    function switchView(viewId) {
+      // Hide all panels
+      document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.add('hidden');
+      });
+      
+      // Remove active class from all buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('tab-active');
+      });
+      
+      // Show selected panel
+      const panel = document.getElementById(viewId);
+      if (panel) {
+        panel.classList.remove('hidden');
+      }
+      
+      // Add active class to clicked button
+      const activeBtn = document.querySelector(`[data-tab="${viewId}"]`);
+      if (activeBtn) {
+        activeBtn.classList.add('tab-active');
+      }
+
+      // Initialize settings if switching to settings tab
+      if (viewId === 'tab-settings') {
+        initializeSettings();
+      }
     }
 
-    // State
-    const state = { projects: [] }
-
-    // Elements
-    const el = id=>document.getElementById(id)
-    const nav = {
-      dashboard: el('nav-dashboard'), projects: el('nav-projects'), allocations: el('nav-allocations'), kanban: el('nav-kanban'), settings: el('nav-settings')
+    // Settings navigation system
+    function switchSettingsTab(tabId) {
+      // Hide all settings panels
+      document.querySelectorAll('.settings-panel').forEach(panel => {
+        panel.classList.add('hidden');
+      });
+      
+      // Remove active class from all settings buttons
+      document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+        btn.classList.remove('bg-blue-500', 'text-white');
+        btn.classList.add('text-gray-400');
+      });
+      
+      // Show selected settings panel
+      const panel = document.getElementById(`settings-${tabId}`);
+      if (panel) {
+        panel.classList.remove('hidden');
+      }
+      
+      // Add active class to clicked settings button
+      const activeBtn = document.querySelector(`[data-settings-tab="${tabId}"]`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-blue-500', 'text-white');
+        activeBtn.classList.remove('text-gray-400');
+      }
     }
 
-    // Routing (very small)
-    nav.dashboard.addEventListener('click', ()=>showPage('dashboard'))
-    nav.projects.addEventListener('click', ()=>showPage('projects'))
-    el('btn-sync').addEventListener('click', async ()=>{
-      el('btn-sync').innerText='Sincronizando...'
-      try{
-        const res = await api.post('/sync/pipefy')
-        alert('Sync completo: '+JSON.stringify(res))
-        loadData()
-      }catch(e){
-        alert('Erro no sync')
-      }finally{el('btn-sync').innerText='Sincronizar Pipefy'}
-    })
-
-    el('btn-refresh').addEventListener('click', ()=>loadData())
-
-    // quick-add handled by professionals.js modal
-
-    function showPage(page){
-      el('page-title').innerText = page === 'dashboard' ? 'Dashboard' : page === 'projects' ? 'Projetos' : 'PMO'
-      // simple
+    // Initialize settings functionality
+    function initializeSettings() {
+      loadSettingsFromStorage();
+      loadTeamMembers();
+      updateSystemStats();
+      bindSettingsEvents();
     }
 
+    // Settings management functions
+    function loadSettingsFromStorage() {
+      const settings = getSettings();
+      
+      // Load Pipefy settings
+      document.getElementById('pipefyApiKey').value = settings.pipefyApiKey || '';
+      document.getElementById('pipefyPipeId').value = settings.pipefyPipeId || '';
+      document.getElementById('serviceCodes').value = settings.serviceCodes || '';
+      document.getElementById('syncInterval').value = settings.syncInterval || '30';
+      
+      // Load language and timezone
+      document.getElementById('language').value = settings.language || 'pt-BR';
+      document.getElementById('timezone').value = settings.timezone || 'America/Sao_Paulo';
+      
+      // Update toggle states
+      updateToggle('theme-toggle', settings.theme !== 'light');
+      updateToggle('notifications-toggle', settings.notifications !== false);
+      updateToggle('autosync-toggle', settings.autoSync !== false);
+    }
+
+    function getSettings() {
+      try {
+        return JSON.parse(localStorage.getItem('pmo_settings') || '{}');
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveSettings(newSettings) {
+      try {
+        const current = getSettings();
+        const updated = { ...current, ...newSettings };
+        localStorage.setItem('pmo_settings', JSON.stringify(updated));
+        return true;
+      } catch (e) {
+        console.error('Failed to save settings:', e);
+        return false;
+      }
+    }
+
+    function updateToggle(toggleId, isActive) {
+      const toggle = document.getElementById(toggleId);
+      if (!toggle) return;
+
+      const slider = toggle.querySelector('.toggle-slider');
+      if (isActive) {
+        toggle.classList.add('bg-blue-500');
+        toggle.classList.remove('bg-gray-600');
+        if (slider) {
+          slider.classList.add('translate-x-6');
+          slider.classList.remove('translate-x-0');
+        }
+      } else {
+        toggle.classList.add('bg-gray-600');
+        toggle.classList.remove('bg-blue-500');
+        if (slider) {
+          slider.classList.add('translate-x-0');
+          slider.classList.remove('translate-x-6');
+        }
+      }
+    }
+
+    // Toggle password visibility
+    function togglePassword(inputId) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+      } else {
+        input.type = 'password';
+      }
+    }
+
+    // Check all connections status
+    async function checkAllConnections() {
+      const statusEl = document.getElementById('pipefy-status');
+      const lastSyncEl = document.getElementById('last-sync');
+      
+      try {
+        statusEl.textContent = 'Testando...';
+        statusEl.className = 'px-2 py-1 text-xs rounded-full bg-yellow-600 text-white';
+        
+        const response = await fetch('/api/sync/pipefy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ test: true })
+        });
+
+        if (response.ok) {
+          statusEl.textContent = 'Conectado';
+          statusEl.className = 'px-2 py-1 text-xs rounded-full bg-green-600 text-white';
+          lastSyncEl.textContent = new Date().toLocaleString('pt-BR');
+        } else {
+          throw new Error(`HTTP ${response.status}`);
+        }
+      } catch (e) {
+        statusEl.textContent = 'Falha';
+        statusEl.className = 'px-2 py-1 text-xs rounded-full bg-red-600 text-white';
+        if (window.showNotification) {
+          window.showNotification('Falha na conexão: ' + e.message, 'error');
+        }
+      }
+    }
+
+    // Load team members for settings
+    async function loadTeamMembers() {
+      const container = document.getElementById('team-list');
+      if (!container) return;
+
+      try {
+        const response = await fetch('/api/professionals');
+        if (!response.ok) throw new Error('Failed to load team');
+        
+        const data = await response.json();
+        const professionals = data.data || data || [];
+
+        container.innerHTML = '';
+        
+        if (professionals.length === 0) {
+          container.innerHTML = '<div class="text-gray-400 text-center py-4">Nenhum profissional cadastrado</div>';
+          return;
+        }
+
+        professionals.forEach(prof => {
+          const memberDiv = document.createElement('div');
+          memberDiv.className = 'flex items-center justify-between p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-all';
+          
+          memberDiv.innerHTML = `
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                ${(prof.name || 'U').charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div class="font-medium text-white">${escapeHtml(prof.name || 'Sem nome')}</div>
+                <div class="text-sm text-gray-400">${escapeHtml(prof.email || '')}</div>
+                <div class="text-xs text-gray-500">${escapeHtml(prof.role || 'Sem função')}</div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-sm text-gray-300">R$ ${Number(prof.hourly_rate || 0).toFixed(2)}/h</span>
+              <button class="text-blue-400 hover:text-blue-300 p-1" onclick="editTeamMember(${prof.id})">
+                ✏️
+              </button>
+              <button class="text-red-400 hover:text-red-300 p-1" onclick="removeTeamMember(${prof.id})">
+                🗑️
+              </button>
+            </div>
+          `;
+          
+          container.appendChild(memberDiv);
+        });
+      } catch (e) {
+        console.error('Failed to load team members:', e);
+        container.innerHTML = '<div class="text-red-400 text-center py-4">Erro ao carregar equipe</div>';
+      }
+    }
+
+    // Update system statistics
+    async function updateSystemStats() {
+      try {
+        // Update projects count
+        const projectsResponse = await fetch('/api/projects');
+        if (projectsResponse.ok) {
+          const projectsData = await projectsResponse.json();
+          const projects = projectsData.data || projectsData || [];
+          document.getElementById('projects-count').textContent = projects.length;
+        }
+
+        // Update professionals count
+        const profResponse = await fetch('/api/professionals');
+        if (profResponse.ok) {
+          const profData = await profResponse.json();
+          const professionals = profData.data || profData || [];
+          document.getElementById('professionals-count-settings').textContent = professionals.length;
+        }
+
+        // Update allocations count (if endpoint exists)
+        try {
+          const allocResponse = await fetch('/api/allocations');
+          if (allocResponse.ok) {
+            const allocData = await allocResponse.json();
+            const allocations = allocData.data || allocData || [];
+            document.getElementById('allocations-count').textContent = allocations.length;
+          }
+        } catch (e) {
+          document.getElementById('allocations-count').textContent = '0';
+        }
+      } catch (e) {
+        console.error('Failed to update system stats:', e);
+      }
+    }
+
+    // Edit team member
+    function editTeamMember(profId) {
+      if (typeof window.openProfessionalModal === 'function') {
+        window.openProfessionalModal(profId);
+      } else if (window.showNotification) {
+        window.showNotification('Funcionalidade de edição não disponível', 'error');
+      }
+    }
+
+    // Remove team member
+    async function removeTeamMember(profId) {
+      if (!confirm('Tem certeza que deseja remover este profissional?')) return;
+
+      try {
+        const response = await fetch(`/api/professionals/${profId}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          loadTeamMembers();
+          updateSystemStats();
+          if (window.showNotification) {
+            window.showNotification('Profissional removido com sucesso', 'success');
+          }
+        } else {
+          throw new Error(`HTTP ${response.status}`);
+        }
+      } catch (e) {
+        if (window.showNotification) {
+          window.showNotification('Erro ao remover profissional: ' + e.message, 'error');
+        }
+      }
+    }
+
+    // Bind settings events
+    function bindSettingsEvents() {
+      // Settings tab navigation
+      document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetTab = btn.getAttribute('data-settings-tab');
+          switchSettingsTab(targetTab);
+        });
+      });
+
+      // Toggle buttons
+      bindToggleButton('theme-toggle', 'theme', (value) => value ? 'dark' : 'light');
+      bindToggleButton('notifications-toggle', 'notifications');
+      bindToggleButton('autosync-toggle', 'autoSync');
+
+      // Save settings on form changes
+      ['language', 'timezone'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.addEventListener('change', (e) => {
+            saveSettings({ [id]: e.target.value });
+            if (window.showNotification) {
+              window.showNotification('Configuração salva', 'success');
+            }
+          });
+        }
+      });
+
+      // Add team member button
+      const addTeamBtn = document.getElementById('btn-add-team-member');
+      if (addTeamBtn) {
+        addTeamBtn.addEventListener('click', () => {
+          if (typeof window.openProfessionalModal === 'function') {
+            window.openProfessionalModal();
+          }
+        });
+      }
+
+      // Advanced actions
+      bindAdvancedActions();
+    }
+
+    function bindToggleButton(toggleId, settingKey, valueTransform = null) {
+      const toggle = document.getElementById(toggleId);
+      if (!toggle) return;
+
+      toggle.addEventListener('click', () => {
+        const settings = getSettings();
+        const currentValue = settings[settingKey];
+        const newValue = valueTransform ? 
+          (currentValue === 'light' ? 'dark' : 'light') : 
+          !currentValue;
+        
+        if (saveSettings({ [settingKey]: newValue })) {
+          updateToggle(toggleId, valueTransform ? newValue === 'dark' : newValue);
+          if (window.showNotification) {
+            window.showNotification('Configuração salva', 'success');
+          }
+        }
+      });
+    }
+
+    function bindAdvancedActions() {
+      // Export settings
+      const exportBtn = document.getElementById('btnExportSettings');
+      if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+          const settings = getSettings();
+          // Remove sensitive data
+          const exportData = { ...settings };
+          delete exportData.pipefyApiKey;
+          
+          const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `pmo-settings-${new Date().toISOString().split('T')[0]}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          
+          if (window.showNotification) {
+            window.showNotification('Configurações exportadas', 'success');
+          }
+        });
+      }
+
+      // Import settings
+      const importBtn = document.getElementById('btnImportSettings');
+      if (importBtn) {
+        importBtn.addEventListener('click', () => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = '.json';
+          
+          input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              try {
+                const imported = JSON.parse(e.target.result);
+                if (saveSettings(imported)) {
+                  loadSettingsFromStorage();
+                  if (window.showNotification) {
+                    window.showNotification('Configurações importadas', 'success');
+                  }
+                }
+              } catch (e) {
+                if (window.showNotification) {
+                  window.showNotification('Erro ao importar: ' + e.message, 'error');
+                }
+              }
+            };
+            reader.readAsText(file);
+          };
+          
+          input.click();
+        });
+      }
+
+      // Reset settings
+      const resetBtn = document.getElementById('btnResetSettings');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          if (confirm('Tem certeza que deseja resetar todas as configurações?')) {
+            localStorage.removeItem('pmo_settings');
+            loadSettingsFromStorage();
+            if (window.showNotification) {
+              window.showNotification('Configurações resetadas', 'success');
+            }
+          }
+        });
+      }
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize global state if needed
+      window.state = window.state || { db: { projects: [], professionals: [], allocations: [] } };
+      
+      // Tab navigation buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetTab = btn.getAttribute('data-tab');
+          switchView(targetTab);
+          
+          // Update URL hash
+          location.hash = targetTab;
+        });
+      });
+
+      // Handle URL hash on load
+      const hash = location.hash.slice(1);
+      if (hash && document.getElementById(hash)) {
+        switchView(hash);
+      } else {
+        switchView('tab-dashboard');
+      }
+
+      // Handle hash changes
+      window.addEventListener('hashchange', () => {
+        const hash = location.hash.slice(1);
+        if (hash && document.getElementById(hash)) {
+          switchView(hash);
+        }
+      });
+
+      // Sync button
+      document.getElementById('btn-sync')?.addEventListener('click', syncPipefy);
+      
+      // Professional modal buttons (connect with existing professionals.js)
+      const btnOpenModal = document.getElementById('btn-open-modal');
+      const btnAddTeamMember = document.getElementById('btn-add-team-member');
+      
+      if (btnOpenModal && typeof window.openProfModal === 'function') {
+        btnOpenModal.addEventListener('click', window.openProfModal);
+      }
+      if (btnAddTeamMember && typeof window.openProfModal === 'function') {
+        btnAddTeamMember.addEventListener('click', window.openProfModal);
+      }
+      
+      // Professional modal events (fallback if professionals.js not loaded)
+      const modalCancel = document.getElementById('modal-prof-cancel');
+      const modalSubmit = document.getElementById('modal-prof-submit');
+      
+      if (modalCancel) {
+        modalCancel.addEventListener('click', () => {
+          if (typeof window.closeProfModal === 'function') {
+            window.closeProfModal();
+          } else {
+            document.getElementById('modal-prof')?.classList.add('hidden');
+          }
+        });
+      }
+      
+      if (modalSubmit) {
+        modalSubmit.addEventListener('click', () => {
+          if (typeof window.submitProfessional === 'function') {
+            window.submitProfessional();
+          } else {
+            console.warn('submitProfessional function not found');
+          }
+        });
+      }
+
+      // Allocation form button
+      const btnCreateAlloc = document.getElementById('btnCreateAlloc');
+      if (btnCreateAlloc && typeof window.createAllocation === 'function') {
+        btnCreateAlloc.addEventListener('click', window.createAllocation);
+      }
+      
+      // Initialize data loading
+      initializeApp();
+    });
+
+    // Initialize the application
+    async function initializeApp() {
+      try {
+        // Initialize global state
+        window.state = window.state || { db: { projects: [], professionals: [], allocations: [] } };
+        
+        // Load initial data
+        await loadData();
+        
+        // Load professionals if function exists
+        if (typeof window.loadProfessionals === 'function') {
+          await window.loadProfessionals();
+        }
+        
+        // Load allocations if function exists  
+        if (typeof window.loadAllocations === 'function') {
+          await window.loadAllocations();
+        }
+        
+        // Populate allocation selects if function exists
+        if (typeof window.populateAllocationSelects === 'function') {
+          window.populateAllocationSelects();
+        }
+        
+        console.log('App initialized successfully');
+      } catch (e) {
+        console.error('Failed to initialize app:', e);
+        if (window.showNotification) {
+          window.showNotification('Erro ao inicializar aplicação: ' + e.message, 'error');
+        } else {
+          console.warn('Initialization failed, but notification system not available');
+        }
+      }
+    }    // Enhanced data loading with better error handling
     async function loadData(){
-      const container = el('projects-table')
-      container.innerHTML = '<div class="muted">Carregando projetos...</div>'
+      const container = document.getElementById('projects-table');
+      if (container) {
+        container.innerHTML = '<div class="text-gray-400 text-center py-4">Carregando projetos...</div>';
+      }
+      
       try{
-        const r = await fetch('/api/projects')
-        if(!r.ok) throw new Error('Erro '+r.status)
-        const projectsRes = await r.json()
-        state.projects = projectsRes.data || projectsRes || []
-        renderProjects()
-        renderOverview()
+        const r = await fetch('/api/projects');
+        if(!r.ok) throw new Error('Erro '+r.status);
+        const projectsRes = await r.json();
+        window.state = window.state || { db: {} };
+        window.state.db.projects = projectsRes.data || projectsRes || [];
+        renderProjects();
+        renderOverview();
+        renderKanban();
       }catch(e){
-        console.warn('failed load', e)
-        container.innerHTML = '<div class="text-red-400 text-sm">Falha ao carregar projetos</div>'
+        console.warn('failed load', e);
+        if (container) {
+          container.innerHTML = '<div class="text-red-400 text-center py-4">Falha ao carregar projetos. <button onclick="loadData()" class="text-blue-400 underline ml-2">Tentar novamente</button></div>';
+        }
       }
     }
 
+    // Enhanced sync function with settings integration
     async function syncPipefy(){
-      const btn = document.getElementById('btn-sync')
-      if(!btn) return
-      const original = btn.textContent
-      btn.disabled = true
-      btn.textContent = 'Sincronizando...'
+      const btn = document.getElementById('btn-sync') || document.getElementById('btnSaveSync');
+      if(!btn) return;
+      const original = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Sincronizando...';
+      btn.classList.add('opacity-60');
+      
       try{
-        const r = await fetch('/api/sync/pipefy',{method:'POST'})
-        if(!r.ok) throw new Error('status '+r.status)
-        await loadData()
-        showMsg('Sincronização concluída','success')
+        // Save current Pipefy settings if on settings page
+        if (btn.id === 'btnSaveSync') {
+          const settings = {
+            pipefyApiKey: document.getElementById('pipefyApiKey')?.value || '',
+            pipefyPipeId: document.getElementById('pipefyPipeId')?.value || '',
+            serviceCodes: document.getElementById('serviceCodes')?.value || '',
+            syncInterval: document.getElementById('syncInterval')?.value || '30'
+          };
+          
+          if (!settings.pipefyApiKey.trim() || !settings.pipefyPipeId.trim()) {
+            throw new Error('API Key e Pipe ID são obrigatórios');
+          }
+          
+          saveSettings(settings);
+        }
+        
+        const r = await fetch('/api/sync/pipefy',{method:'POST'});
+        if(!r.ok) throw new Error('status '+r.status);
+        const result = await r.json();
+        await loadData();
+        
+        // Update last sync time
+        const lastSyncEl = document.getElementById('last-sync');
+        if (lastSyncEl) {
+          lastSyncEl.textContent = new Date().toLocaleString('pt-BR');
+        }
+        
+        if (window.showNotification) {
+          window.showNotification(`Sincronização concluída: ${result.upserts || 0} projeto(s)`, 'success');
+        }
       }catch(e){
-        console.error('syncPipefy', e)
-        showMsg('Falha na sincronização','error')
+        console.error('syncPipefy', e);
+        if (window.showNotification) {
+          window.showNotification('Falha na sincronização: ' + e.message, 'error');
+        }
       }finally{
-        btn.disabled = false
-        btn.textContent = original
+        btn.disabled = false;
+        btn.textContent = original;
+        btn.classList.remove('opacity-60');
       }
     }
 
-    document.addEventListener('DOMContentLoaded', ()=>{
-      document.getElementById('btn-sync')?.addEventListener('click', syncPipefy)
-    })
-
+    // Enhanced project rendering
     function renderProjects(){
-      const container = el('projects-table')
-      container.innerHTML = ''
-      if(!state.projects.length) container.innerHTML = '<div class="muted">Nenhum projeto encontrado</div>'
-      state.projects.slice(0,50).forEach(p=>{
-        const div = document.createElement('div')
-        div.className='p-3 border-b border-white/5 flex items-center justify-between'
-        div.innerHTML = `<div><div class="font-medium">${escapeHtml(p.name||'—')}</div><div class="muted small">${escapeHtml(p.pipefy_status||'--')}</div></div><div class="muted small">${escapeHtml(p.pipefy_owner_email||'—')}</div>`
-        container.appendChild(div)
-      })
+      const container = document.getElementById('projects-table');
+      const tbody = document.getElementById('projects-tbody');
+      
+      if (!window.state?.db?.projects) return;
+      
+      if (container) {
+        if (window.state.db.projects.length === 0) {
+          container.innerHTML = '<div class="text-gray-400 text-center py-8">Nenhum projeto encontrado. <button onclick="syncPipefy()" class="text-blue-400 underline ml-2">Sincronizar Pipefy</button></div>';
+        } else {
+          // Dashboard table
+          container.innerHTML = '';
+          window.state.db.projects.slice(0,8).forEach(p => {
+            const div = document.createElement('div');
+            div.className = 'flex items-center justify-between p-4 hover:bg-gray-700/30 rounded-lg transition-all';
+            
+            const priorityColor = p.pipefy_priority === 'high' ? 'text-red-400' : 
+                                 p.pipefy_priority === 'medium' ? 'text-yellow-400' : 
+                                 p.pipefy_priority === 'low' ? 'text-green-400' : 'text-gray-400';
+            
+            div.innerHTML = `
+              <div>
+                <div class="font-medium text-white">${escapeHtml(p.name||'—')}</div>
+                <div class="text-sm ${priorityColor}">${escapeHtml(p.pipefy_status||'--')}</div>
+              </div>
+              <div class="text-right">
+                <div class="text-gray-300">${escapeHtml(p.pipefy_owner_email||'—')}</div>
+                <div class="text-sm text-gray-400">${Number(p.estimated_hours||0).toFixed(1)}h</div>
+              </div>
+            `;
+            container.appendChild(div);
+          });
+        }
+      }
+
+      // Projects page table
+      if (tbody) {
+        tbody.innerHTML = '';
+        if (window.state.db.projects.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-400 py-8">Nenhum projeto encontrado</td></tr>';
+        } else {
+          window.state.db.projects.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-gray-700/30 transition-all';
+            
+            const priorityColor = p.pipefy_priority === 'high' ? 'text-red-400' : 
+                                 p.pipefy_priority === 'medium' ? 'text-yellow-400' : 
+                                 p.pipefy_priority === 'low' ? 'text-green-400' : 'text-gray-300';
+            
+            tr.innerHTML = `
+              <td class="py-4 font-medium">${escapeHtml(p.name||'—')}</td>
+              <td class="py-4 ${priorityColor}">${escapeHtml(p.pipefy_status||'—')}</td>
+              <td class="py-4">${escapeHtml(p.pipefy_owner_email||'—')}</td>
+              <td class="py-4">${Number(p.estimated_hours||0).toFixed(1)}h</td>
+              <td class="py-4">${(p.created_at||'').slice(0,10)}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+      }
     }
 
+    // Enhanced overview rendering
     function renderOverview(){
-      const totals = state.projects.reduce((acc,p)=>{acc.active += (p.pipefy_status!=='done' && p.pipefy_status?1:0); acc.hours += Number(p.estimated_hours||0); return acc},{active:0,hours:0})
-      el('active-count').innerText = totals.active
-      el('est-hours').innerText = totals.hours.toFixed(1)
+      if (!window.state?.db?.projects) return;
 
-      // top list
-      const top = state.projects.slice().sort((a,b)=> (Number(b.estimated_hours||0)-Number(a.estimated_hours||0))).slice(0,5)
-      el('top-list').innerHTML = top.map(t=>`<li class="flex justify-between"><span>${escapeHtml(t.name||'—')}</span><span class="muted small">${Number(t.estimated_hours||0).toFixed(1)}h</span></li>`).join('')
+      const projects = window.state.db.projects;
+      const totals = projects.reduce((acc,p) => {
+        acc.active += (p.pipefy_status !== 'done' && p.pipefy_status ? 1 : 0); 
+        acc.hours += Number(p.estimated_hours||0); 
+        return acc;
+      }, {active:0, hours:0});
 
-      // chart
-      const ctx = document.getElementById('overviewChart').getContext('2d')
-      if(window._overviewChart) window._overviewChart.destroy()
-      window._overviewChart = new Chart(ctx, {type:'line', data:{labels:state.projects.slice(0,10).map(p=>p.name||'—'), datasets:[{label:'Horas', data:state.projects.slice(0,10).map(p=>Number(p.estimated_hours||0)), borderColor:'#7c3aed', backgroundColor:'rgba(124,58,237,0.2)'}]}, options:{responsive:true, maintainAspectRatio:false}})
+      // Update metrics
+      const activeEl = document.getElementById('active-count');
+      const hoursEl = document.getElementById('est-hours');
+      const profCountEl = document.getElementById('professionals-count');
+      
+      if (activeEl) activeEl.textContent = totals.active;
+      if (hoursEl) hoursEl.textContent = totals.hours.toFixed(1) + 'h';
+      if (profCountEl) profCountEl.textContent = window.state?.db?.professionals?.length || 0;
+
+      // Top projects list
+      const topList = document.getElementById('top-list');
+      if (topList) {
+        const top = projects.slice().sort((a,b) => (Number(b.estimated_hours||0) - Number(a.estimated_hours||0))).slice(0,5);
+        topList.innerHTML = top.map(t => `
+          <li class="flex justify-between items-center p-3 hover:bg-gray-700/30 rounded-lg transition-all">
+            <span class="text-white font-medium">${escapeHtml(t.name||'—')}</span>
+            <span class="text-gray-400 text-sm">${Number(t.estimated_hours||0).toFixed(1)}h</span>
+          </li>
+        `).join('');
+      }
+
+      // Chart
+      const ctx = document.getElementById('overviewChart');
+      if (ctx) {
+        const chartCtx = ctx.getContext('2d');
+        if (window._overviewChart) window._overviewChart.destroy();
+        
+        const chartData = projects.slice(0,10);
+        window._overviewChart = new Chart(chartCtx, {
+          type: 'bar',
+          data: {
+            labels: chartData.map(p => (p.name||'—').slice(0,15)),
+            datasets: [{
+              label: 'Horas Estimadas',
+              data: chartData.map(p => Number(p.estimated_hours||0)),
+              backgroundColor: 'rgba(59, 130, 246, 0.5)',
+              borderColor: 'rgba(59, 130, 246, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: { 
+                beginAtZero: true,
+                ticks: { color: '#9CA3AF' },
+                grid: { color: 'rgba(156, 163, 175, 0.1)' }
+              },
+              x: { 
+                ticks: { color: '#9CA3AF' },
+                grid: { color: 'rgba(156, 163, 175, 0.1)' }
+              }
+            }
+          }
+        });
+      }
     }
 
-    function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])) }
+    // Kanban rendering
+    function renderKanban() {
+      if (!window.state?.db?.projects) return;
 
-    // init
-    (function(){
-      fetch('/api').catch(()=>{})
-      loadData()
-    })()
+      const projects = window.state.db.projects;
+      const kanbanColumns = {
+        'kanban-backlog': projects.filter(p => !p.pipefy_status || p.pipefy_status === 'imported'),
+        'kanban-progress': projects.filter(p => p.pipefy_status === 'in_progress' || p.pipefy_status === 'active'),
+        'kanban-review': projects.filter(p => p.pipefy_status === 'review' || p.pipefy_status === 'testing'),
+        'kanban-done': projects.filter(p => p.pipefy_status === 'done' || p.pipefy_status === 'completed')
+      };
+
+      Object.entries(kanbanColumns).forEach(([columnId, projectList]) => {
+        const column = document.getElementById(columnId);
+        if (column) {
+          column.innerHTML = '';
+          projectList.slice(0,10).forEach(project => {
+            const card = document.createElement('div');
+            card.className = 'bg-gray-700 p-3 rounded-lg cursor-pointer hover:bg-gray-600 transition-all';
+            card.innerHTML = `
+              <div class="font-medium text-white text-sm mb-1">${escapeHtml(project.name||'—')}</div>
+              <div class="text-xs text-gray-400">${escapeHtml(project.pipefy_owner_email||'Sem responsável')}</div>
+              <div class="text-xs text-gray-400 mt-1">${Number(project.estimated_hours||0).toFixed(1)}h</div>
+            `;
+            column.appendChild(card);
+          });
+          
+          if (projectList.length === 0) {
+            column.innerHTML = '<div class="text-gray-500 text-sm text-center py-4">Nenhum projeto</div>';
+          }
+        }
+      });
+    }
+
+    function escapeHtml(s){ 
+      if(!s) return ''; 
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    // Global helper functions for backward compatibility
+    window.escapeHtml = escapeHtml;
+    window.syncPipefy = syncPipefy;
+    window.loadData = loadData;
+    window.renderProjects = renderProjects;
+    window.renderOverview = renderOverview;
+    window.renderKanban = renderKanban;
+    window.switchView = switchView;
+    window.initializeSettings = initializeSettings;
+    
+    // Unified fetch function for consistency
+    window.fetchJSON = async function(url, options = {}) {
+      try {
+        const response = await fetch(url, options);
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.error || response.statusText || `HTTP ${response.status}`);
+        }
+        return data.data || data || [];
+      } catch (error) {
+        console.error(`fetchJSON error for ${url}:`, error);
+        throw error;
+      }
+    };
   </script>
 </body>
-
 </html>

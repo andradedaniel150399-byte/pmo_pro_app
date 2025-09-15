@@ -68,7 +68,7 @@
   function closeProfModal() {
     document.getElementById('modal-prof')?.classList.add('hidden');
     document.getElementById('modal-prof-error')?.classList.add('hidden');
-    ['modal-prof-name', 'modal-prof-email', 'modal-prof-role', 'modal-prof-hourly-rate'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    ['modal-prof-name', 'modal-prof-email', 'modal-prof-role', 'modal-prof-hourly'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   }
 
     async function submitProfessional() {
@@ -121,7 +121,7 @@
       }
 
       window.showNotification?.('Profissional criado com sucesso', 'success');
-      closeProfessionalModal();
+      closeProfModal();
       await window.loadProfessionals?.(true);
       if(typeof window.populateAllocationSelects === 'function') {
         window.populateAllocationSelects();
@@ -143,11 +143,13 @@
   // attach UI hooks
   document.getElementById('btn-add-prof')?.addEventListener('click', () => openProfModal());
   document.getElementById('modal-prof-cancel')?.addEventListener('click', () => closeProfModal());
-  document.getElementById('modal-prof-submit')?.addEventListener('click', () => submitProfModal());
+  document.getElementById('modal-prof-submit')?.addEventListener('click', () => submitProfessional());
 
   // exports
   window.loadProfessionals = loadProfessionals;
   window.openProfModal = openProfModal;
+  window.closeProfModal = closeProfModal;
+  window.submitProfessional = submitProfessional;
   window.closeProfModal = closeProfModal;
 
 })();

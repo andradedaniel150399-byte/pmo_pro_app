@@ -47,7 +47,11 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 // Modo mock local para facilitar smoke-tests locais quando quem estiver
 // executando fornecer variáveis 'dummy' (útil no dev container). Isso evita
 // falhas de conexão com um Supabase inexistente e permite testar o frontend.
-const MOCK_DEV = SUPABASE_URL?.includes('localhost') || (SUPABASE_SERVICE_KEY || '').includes('dummy');
+const MOCK_DEV = process.env.MOCK_DEV === '1' || SUPABASE_URL?.includes('localhost') || (SUPABASE_SERVICE_KEY || '').includes('dummy');
+
+console.log(`🔧 Starting server in ${MOCK_DEV ? 'MOCK_DEV' : 'PRODUCTION'} mode`);
+console.log(`📊 SUPABASE_URL: ${SUPABASE_URL?.slice(0, 20)}...`);
+console.log(`🔑 MOCK_DEV flag: ${process.env.MOCK_DEV}`);
 
 // Expor variáveis públicas para o frontend
 app.get('/env.js', (_req, res) => {
@@ -498,4 +502,8 @@ app.get('*', (req, res) => {
 
 // Bind explicitly to all IPv4 interfaces to avoid local "connection refused" issues
 // on systems where localhost resolves differently.
-app.listen(PORT, '0.0.0.0');
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📱 Frontend: http://localhost:${PORT}`);
+  console.log(`🔧 Mode: ${process.env.MOCK_DEV ? 'MOCK_DEV' : 'PRODUCTION'}`);
+});

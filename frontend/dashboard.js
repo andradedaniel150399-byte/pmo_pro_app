@@ -146,23 +146,36 @@
 
     if (rangeEl) {
       rangeEl.value = state.currentRange;
-      on(rangeEl, 'change', async () => {
+      const debouncedRangeChange = window.debounce ? window.debounce(async () => {
         state.currentRange = String(rangeEl.value || '30');
         persistState();
         await Promise.all([loadSeries(), loadTopProjects()]);
-      });
+      }, 500) : async () => {
+        state.currentRange = String(rangeEl.value || '30');
+        persistState();
+        await Promise.all([loadSeries(), loadTopProjects()]);
+      };
+      on(rangeEl, 'change', debouncedRangeChange);
     }
     if (ownerEl) {
-      on(ownerEl, 'change', async () => {
+      const debouncedOwnerChange = window.debounce ? window.debounce(async () => {
         state.filters.owner = ownerEl.value.trim();
         await refreshAll();
-      });
+      }, 500) : async () => {
+        state.filters.owner = ownerEl.value.trim();
+        await refreshAll();
+      };
+      on(ownerEl, 'change', debouncedOwnerChange);
     }
     if (statusEl) {
-      on(statusEl, 'change', async () => {
+      const debouncedStatusChange = window.debounce ? window.debounce(async () => {
         state.filters.status = statusEl.value.trim();
         await refreshAll();
-      });
+      }, 500) : async () => {
+        state.filters.status = statusEl.value.trim();
+        await refreshAll();
+      };
+      on(statusEl, 'change', debouncedStatusChange);
     }
   }
 

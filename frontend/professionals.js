@@ -28,13 +28,22 @@
       const selCreate = document.getElementById('alloc-prof');
       const selFilter = document.getElementById('filter-prof');
       if (!tbody || !selCreate) return;
+      
+      // Check if empty
+      if(window.state.db.professionals.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-xs text-zinc-500 py-6">Nenhum profissional ainda. <button onclick="document.getElementById(\'btn-open-modal\')?.click()" class="text-blue-500 underline ml-1">Adicionar primeiro</button></td></tr>';
+        selCreate.innerHTML = '<option value="">Nenhum profissional</option>';
+        if (selFilter) selFilter.innerHTML = '<option value="">Todos</option>';
+        return;
+      }
+      
       tbody.innerHTML = '';
       selCreate.innerHTML = '';
       if (selFilter) selFilter.innerHTML = '<option value="">Todos</option>';
       (window.state.db.professionals || []).forEach(p => {
         const tr = document.createElement('tr');
         const hourly = (typeof window.formatHourly === 'function') ? window.formatHourly(p.hourly_rate) : (p.hourly_rate ?? '-');
-        tr.innerHTML = `<td class="py-2 pr-4">${p.name}</td><td class="py-2 pr-4">${p.email ?? '-'}</td><td class="py-2">${p.role ?? '-'}</td><td class="py-2 pr-4">${hourly}</td>`;
+        tr.innerHTML = `<td class="py-2 pr-4">${p.name}</td><td class="py-2 pr-4">${p.email ?? '-'}</td><td class="py-2">${p.role ?? '-'}</td><td class="py-2 pr-4">R$ ${hourly}</td>`;
         tbody.appendChild(tr);
         const opt = document.createElement('option');
         opt.value = p.id;
@@ -44,6 +53,10 @@
       });
     } catch (e) {
       console.error('loadProfessionals', e);
+      const tbody = document.getElementById('professionals-tbody');
+      if(tbody){
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-xs text-red-400 py-4">Falha ao carregar profissionais <button onclick="window.loadProfessionals?.(true)" class="text-blue-500 underline ml-1">Tentar novamente</button></td></tr>';
+      }
       window.showNotification?.('Erro ao carregar profissionais', 'error');
     }
   }
@@ -58,24 +71,73 @@
     ['modal-prof-name', 'modal-prof-email', 'modal-prof-role', 'modal-prof-hourly-rate'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   }
 
-  async function submitProfModal() {
-    const name = document.getElementById('modal-prof-name')?.value?.trim();
-    const email = document.getElementById('modal-prof-email')?.value?.trim() || null;
-    const role = document.getElementById('modal-prof-role')?.value?.trim() || null;
-    const hrRaw = document.getElementById('modal-prof-hourly-rate')?.value?.trim();
-    const errorEl = document.getElementById('modal-prof-error');
-    if (!name) { if (errorEl) { errorEl.textContent = 'Nome é obrigatório'; errorEl.classList.remove('hidden'); } return; }
-    let hourly_rate = undefined;
-    if (hrRaw) { const n = Number(String(hrRaw).replace(',', '.')); if (!Number.isFinite(n) || n < 0) { if (errorEl) { errorEl.textContent = 'Taxa inválida'; errorEl.classList.remove('hidden'); } return; } hourly_rate = n; }
+    async function submitProfessional() {
+    const nameEl = document.getElementById('modal-prof-name');
+    const emailEl = document.getElementById('modal-prof-email');
+    const roleEl = document.getElementById('modal-prof-role');
+    const hourlyEl = document.getElementById('modal-prof-hourly');
+    const submitBtn = document.getElementById('modal-prof-submit');
+    const errorDiv = document.getElementById('modal-prof-error');
+
+    const name = nameEl?.value?.trim();
+    const email = emailEl?.value?.trim();
+    const role = roleEl?.value?.trim();
+    const hourlyVal = hourlyEl?.value?.trim();
+
+    // Clear previous errors
+    if (errorDiv) errorDiv.textContent = '';
+
+    if (!name) {
+      if (errorDiv) errorDiv.textContent = 'Nome é obrigatório';
+      nameEl?.focus();
+      return;
+    }
+
+    const hourly_rate = hourlyVal ? parseFloat(hourlyVal) : null;
+    if (hourlyVal && (isNaN(hourly_rate) || hourly_rate < 0)) {
+      if (errorDiv) errorDiv.textContent = 'Valor por hora deve ser um número válido';
+      hourlyEl?.focus();
+      return;
+    }
+
+    // Disable submit button and show loading
+    const originalText = submitBtn?.textContent || 'Salvar';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Salvando...';
+      submitBtn.style.opacity = '0.6';
+    }
+
     try {
-      const res = await fetch('/api/professionals', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name, email, role, hourly_rate }) });
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(j.error || j.message || 'erro');
-      closeProfModal();
-      window.state.db.professionals = [];
-      await loadProfessionals(true);
-      window.showNotification?.('Profissional adicionado', 'success');
-    } catch (e) { if (errorEl) { errorEl.textContent = e.message || 'Erro ao criar profissional'; errorEl.classList.remove('hidden'); } }
+      const response = await fetch('/api/professionals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, role, hourly_rate })
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao salvar profissional');
+      }
+
+      window.showNotification?.('Profissional criado com sucesso', 'success');
+      closeProfessionalModal();
+      await window.loadProfessionals?.(true);
+      if(typeof window.populateAllocationSelects === 'function') {
+        window.populateAllocationSelects();
+      }
+    } catch (error) {
+      console.error('submitProfessional', error);
+      if (errorDiv) errorDiv.textContent = error.message;
+      window.showNotification?.('Erro ao criar profissional: ' + error.message, 'error');
+    } finally {
+      // Restore submit button
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+        submitBtn.style.opacity = '1';
+      }
+    }
   }
 
   // attach UI hooks

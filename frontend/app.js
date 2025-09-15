@@ -66,12 +66,25 @@ async function loadProjects(force = false) {
     const selCreate = document.getElementById('alloc-project');
     const selFilter = document.getElementById('filter-project');
     if (!tbody || !selCreate) return;
+    
+    // Check if empty
+    if(state.db.projects.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-xs text-zinc-500 py-6">Nenhum projeto ainda. <button onclick="window.showNotification?.(\'Use o botão Sincronizar Pipefy\',\'info\')" class="text-blue-500 underline ml-1">Sincronizar dados</button></td></tr>';
+      selCreate.innerHTML = '<option value="">Nenhum projeto</option>';
+      if (selFilter) selFilter.innerHTML = '<option value="">Todos</option>';
+      return;
+    }
+    
     tbody.innerHTML = '';
     selCreate.innerHTML = '';
     if (selFilter) selFilter.innerHTML = '<option value="">Todos</option>';
     (state.db.projects || []).forEach(p => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td class=\"py-2 pr-4\">${p.name ?? '-'} </td><td class=\"py-2 pr-4\">${p.id ?? '-'}</td><td class=\"py-2 pr-4\">${p.pipefy_status || p.status || '-'}</td><td class=\"py-2 pr-4\">${p.pipefy_owner_email || p.owner_email || '-'}</td><td class=\"py-2\">${(p.created_at || '').slice(0,10)}</td>`;
+      // Add priority color coding
+      const priorityClass = p.pipefy_priority === 'high' ? 'text-red-600' : 
+                           p.pipefy_priority === 'medium' ? 'text-yellow-600' : 
+                           p.pipefy_priority === 'low' ? 'text-green-600' : '';
+      tr.innerHTML = `<td class=\"py-2 pr-4\">${p.name ?? '-'} </td><td class=\"py-2 pr-4\">${p.id ?? '-'}</td><td class=\"py-2 pr-4 ${priorityClass}\">${p.pipefy_status || p.status || '-'}</td><td class=\"py-2 pr-4\">${p.pipefy_owner_email || p.owner_email || '-'}</td><td class=\"py-2\">${(p.created_at || '').slice(0,10)}</td>`;
       tbody.appendChild(tr);
       const opt = document.createElement('option');
       opt.value = p.id;
@@ -81,6 +94,8 @@ async function loadProjects(force = false) {
     });
   } catch (e) {
     console.error('loadProjects', e);
+    const tbody = document.getElementById('projects-tbody');
+    if(tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center text-xs text-red-400 py-4">Falha ao carregar projetos <button onclick="window.loadProjects?.(true)" class="text-blue-500 underline ml-1">Tentar novamente</button></td></tr>';
     showNotification('Erro ao carregar projetos', 'error');
   }
 }

@@ -155,28 +155,7 @@
 
     el('btn-refresh').addEventListener('click', ()=>loadData())
 
-    // quick-add professional (prompts) — includes hourly_rate support
-    document.getElementById('btn-add-prof')?.addEventListener('click', async ()=>{
-      const name = prompt('Nome do profissional:')?.trim();
-      if(!name) return alert('Nome é obrigatório');
-      const email = prompt('Email (opcional):')?.trim() || null;
-      const role = prompt('Função / cargo (opcional):')?.trim() || null;
-      const hr = prompt('Taxa por hora (ex: 120.50) — opcional:')?.trim() || null;
-      let hourly_rate = null;
-      if(hr){
-        const n = Number(hr.replace(',', '.'));
-        if(!Number.isFinite(n)) return alert('Taxa inválida');
-        hourly_rate = n;
-      }
-      try{
-        const res = await fetch('/api/professionals', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ name, email, role, hourly_rate }) });
-        const j = await res.json();
-        if(!res.ok) throw new Error(j.error || 'erro');
-        alert('Profissional criado: ' + (j.name || j.id || 'OK'));
-      }catch(e){
-        alert('Erro ao criar profissional: '+e.message);
-      }
-    })
+    // quick-add handled by professionals.js modal
 
     function showPage(page){
       el('page-title').innerText = page === 'dashboard' ? 'Dashboard' : page === 'projects' ? 'Projetos' : 'PMO'
@@ -184,13 +163,18 @@
     }
 
     async function loadData(){
+      const container = el('projects-table')
+      container.innerHTML = '<div class="muted">Carregando projetos...</div>'
       try{
-        const projectsRes = await fetch('/api/projects').then(r=>r.json())
+        const r = await fetch('/api/projects')
+        if(!r.ok) throw new Error('Erro '+r.status)
+        const projectsRes = await r.json()
         state.projects = projectsRes.data || projectsRes || []
         renderProjects()
         renderOverview()
       }catch(e){
         console.warn('failed load', e)
+        container.innerHTML = '<div class="text-red-400 text-sm">Falha ao carregar projetos</div>'
       }
     }
 

@@ -238,6 +238,35 @@ app.get('/api/metrics/top-projects', async (req, res) => {
 });
 
 // ===== CRUD já existentes =====
+// Listar projetos (com filtros simples). Usado pelo novo SPA.
+app.get('/api/projects', async (req, res) => {
+  try {
+    if (MOCK_DEV) {
+      return res.json({
+        data: [
+          { id: 1, external_id: 'p1', name: 'Projeto Demo A', pipefy_status: 'in_progress', pipefy_owner_email: 'ownerA@example.com', pipefy_priority: 'high', estimated_hours: 80, started_at: '2025-09-01', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+          { id: 2, external_id: 'p2', name: 'Projeto Demo B', pipefy_status: 'imported', pipefy_owner_email: 'ownerB@example.com', pipefy_priority: 'medium', estimated_hours: 40, started_at: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+          { id: 3, external_id: 'p3', name: 'Projeto Demo C', pipefy_status: 'done', pipefy_owner_email: 'ownerC@example.com', pipefy_priority: 'low', estimated_hours: 10, started_at: '2025-08-15', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+        ]
+      });
+    }
+
+    const { status, owner_email, limit } = req.query || {};
+    let q = supabase
+      .from('projects')
+      .select('id,external_id,name,pipefy_status,pipefy_owner_email,pipefy_priority,estimated_hours,started_at,status,owner_email,created_at,updated_at')
+      .order('created_at', { ascending: false })
+      .limit(Math.max(1, Math.min(1000, Number(limit) || 500)));
+    if (status) q = q.eq('pipefy_status', status);
+    if (owner_email) q = q.eq('pipefy_owner_email', owner_email);
+    const { data, error } = await q;
+    if (error) throw error;
+    res.json({ data });
+  } catch (e) {
+    console.error('[projects:list]', e);
+    res.status(500).json({ error: e.message });
+  }
+});
 app.get('/api/professionals', async (_req, res) => {
   if (MOCK_DEV) return res.json([{ id: 'u1', name: 'Alice', email: 'alice@example.com', role: 'PM', hourly_rate: 120 }, { id: 'u2', name: 'Bruno', email: 'bruno@example.com', role: 'Dev', hourly_rate: 80 }]);
   const { data, error } = await supabase

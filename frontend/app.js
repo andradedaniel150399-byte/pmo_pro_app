@@ -112,7 +112,7 @@ async function loadProfessionals(force = false) {
 
     (state.db.professionals || []).forEach(p => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td class="py-2 pr-4">${p.name}</td><td class="py-2 pr-4">${p.email ?? '-'}</td><td class="py-2">${p.role ?? '-'}</td>`;
+      tr.innerHTML = `<td class="py-2 pr-4">${p.name}</td><td class="py-2 pr-4">${p.email ?? '-'}</td><td class="py-2 pr-4">${p.role ?? '-'}</td><td class="py-2">${formatHourly(p.hourly_rate)}</td>`;
       tbody.appendChild(tr);
 
       const opt = document.createElement('option');
@@ -127,6 +127,12 @@ async function loadProfessionals(force = false) {
   }
 }
 
+  function formatHourly(v) {
+    if (v === undefined || v === null) return '-';
+    const n = Number(v);
+    if (!Number.isFinite(n)) return '-';
+    return n.toFixed(2);
+  }
 async function addProfessional() {
   const name = document.getElementById('prof-name').value.trim();
   const email = document.getElementById('prof-email').value.trim();
@@ -134,24 +140,37 @@ async function addProfessional() {
   const hourly_rate_raw = document.getElementById('prof-hourly-rate')?.value?.trim();
   const hourly_rate = hourly_rate_raw ? Number(String(hourly_rate_raw).replace(',', '.')) : undefined;
   if (!name) return alert('Informe o nome');
+// Modal-based add professional (better UX)
+function openProfModal(){
+  document.getElementById('modal-prof')?.classList.remove('hidden');
+}
+function closeProfModal(){
+  document.getElementById('modal-prof')?.classList.add('hidden');
+  document.getElementById('modal-prof-error')?.classList.add('hidden');
+  ['modal-prof-name','modal-prof-email','modal-prof-role','modal-prof-hourly-rate'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value = ''; });
+}
 
-  try {
-    const r = await fetch('/api/professionals', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, role })
-    });
-    const j = await r.json();
-    if (!r.ok) throw new Error(j.error || 'erro');
-    document.getElementById('prof-name').value = '';
-    document.getElementById('prof-email').value = '';
-    document.getElementById('prof-role').value = '';
-    if (document.getElementById('prof-hourly-rate')) document.getElementById('prof-hourly-rate').value = '';
-    state.db.professionals = []; // força recarga
+document.getElementById('btn-add-prof')?.addEventListener('click', ()=>openProfModal());
+document.getElementById('modal-prof-cancel')?.addEventListener('click', ()=>closeProfModal());
+document.getElementById('modal-prof-submit')?.addEventListener('click', async ()=>{
+  const name = document.getElementById('modal-prof-name')?.value?.trim();
+  const email = document.getElementById('modal-prof-email')?.value?.trim() || null;
+  const role = document.getElementById('modal-prof-role')?.value?.trim() || null;
+  const hrRaw = document.getElementById('modal-prof-hourly-rate')?.value?.trim();
+  const errorEl = document.getElementById('modal-prof-error');
+  if(!name){ errorEl.textContent = 'Nome é obrigatório'; errorEl.classList.remove('hidden'); return; }
+  let hourly_rate = undefined;
+  if(hrRaw){ const n = Number(String(hrRaw).replace(',', '.')); if(!Number.isFinite(n) || n < 0){ errorEl.textContent = 'Taxa inválida'; errorEl.classList.remove('hidden'); return; } hourly_rate = n; }
+  try{
+    const res = await fetch('/api/professionals', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ name, email, role, hourly_rate }) });
+    const j = await res.json();
+    if(!res.ok) throw new Error(j.error || 'erro');
+    closeProfModal();
+    state.db.professionals = [];
     await loadProfessionals(true);
-    alert('Profissional adicionado!');
-  } catch (e) {
-    alert('Erro: ' + e.message);
-  }
+    showNotification?.('Profissional adicionado', 'success');
+  }catch(e){ errorEl.textContent = e.message || 'Erro ao criar profissional'; errorEl.classList.remove('hidden'); }
+});
 }
 
 // --- autenticação/demo ---

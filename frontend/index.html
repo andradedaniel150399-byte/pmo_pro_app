@@ -40,6 +40,9 @@
       </nav>
       <div class="mt-6">
         <button class="btn" id="btn-sync">Sincronizar Pipefy</button>
+        <div class="mt-3">
+          <button id="btn-add-prof" class="ghost" style="width:100%">➕ Adicionar Profissional</button>
+        </div>
       </div>
     </aside>
 
@@ -133,6 +136,29 @@
     })
 
     el('btn-refresh').addEventListener('click', ()=>loadData())
+
+    // quick-add professional (prompts) — includes hourly_rate support
+    document.getElementById('btn-add-prof')?.addEventListener('click', async ()=>{
+      const name = prompt('Nome do profissional:')?.trim();
+      if(!name) return alert('Nome é obrigatório');
+      const email = prompt('Email (opcional):')?.trim() || null;
+      const role = prompt('Função / cargo (opcional):')?.trim() || null;
+      const hr = prompt('Taxa por hora (ex: 120.50) — opcional:')?.trim() || null;
+      let hourly_rate = null;
+      if(hr){
+        const n = Number(hr.replace(',', '.'));
+        if(!Number.isFinite(n)) return alert('Taxa inválida');
+        hourly_rate = n;
+      }
+      try{
+        const res = await fetch('/api/professionals', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ name, email, role, hourly_rate }) });
+        const j = await res.json();
+        if(!res.ok) throw new Error(j.error || 'erro');
+        alert('Profissional criado: ' + (j.name || j.id || 'OK'));
+      }catch(e){
+        alert('Erro ao criar profissional: '+e.message);
+      }
+    })
 
     function showPage(page){
       el('page-title').innerText = page === 'dashboard' ? 'Dashboard' : page === 'projects' ? 'Projetos' : 'PMO'

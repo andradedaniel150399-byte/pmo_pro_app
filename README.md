@@ -115,3 +115,54 @@ Observação: o script aplica os arquivos em ordem alfabética; tenha cuidado em
 
 
 O `dashboard.js` agora centraliza os botões de sincronização e logout. A função `handleLogout` está disponível em `ui.js` para que qualquer página possa encerrar a sessão.
+
+## Endpoints Principais
+
+| Rota | Método | Descrição |
+|------|--------|-----------|
+| /api | GET | Healthcheck |
+| /api/projects | GET | Lista projetos (filtros: `status`, `owner_email`) |
+| /api/sync/pipefy | POST | Sincroniza projetos Pipefy para `projects` |
+| /api/metrics/overview | GET | Métricas agregadas básicas |
+| /api/metrics/timeseries | GET | Série temporal de criação de projetos |
+| /api/metrics/top-projects | GET | Ranking por horas (usa allocations) |
+| /api/professionals | GET/POST | Listar / criar profissionais (`hourly_rate` suportado) |
+| /api/allocations | GET/POST | Listar / criar alocações |
+| /api/allocations/cleanup | POST | Remoção filtrada de alocações |
+| /api/gemini | POST | Proxy LLM (mock em dev) |
+
+## Desenvolvimento Local (MOCK_DEV)
+
+Defina variáveis Supabase com valores dummy para ativar o modo mock:
+```bash
+export SUPABASE_URL=http://localhost/dummy
+export SUPABASE_SERVICE_KEY=dummy
+export SUPABASE_ANON_KEY=dummy
+```
+No modo MOCK_DEV:
+
+| Recurso | Comportamento |
+|---------|---------------|
+| /api/projects | 3 projetos mock |
+| /api/professionals | 2 profissionais mock |
+| POST /api/professionals | Retorna objeto mock-* sem persistir |
+| /api/allocations | 2 alocações mock |
+| POST /api/allocations | Retorna alocação mock |
+| /api/sync/pipefy | 400 (falta credenciais Pipefy) |
+| /api/gemini | Resposta simulada |
+
+## Testes
+
+Executar:
+```bash
+npm test
+```
+Cobertura atual:
+- Falha rápida (exit code 1) sem variáveis Supabase
+- Health `/api`
+- `/api/projects` (mock)
+- `/api/professionals` GET/POST (mock)
+- `/api/allocations` GET/POST (mock)
+- `/api/sync/pipefy` retorno 400 sem PIPEFY_TOKEN
+
+Adicione novos testes criando arquivos `*.test.js` (Node 18+ suporta `node --test`).

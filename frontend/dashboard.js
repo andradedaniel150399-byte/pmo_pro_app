@@ -73,24 +73,12 @@
     } catch {}
   };
 
-  async function fetchJSON(path, opts={}) {
-    const key = `cache:${path}:${opts.method||'GET'}`;
-    if ((opts.cache ?? 'hit') === 'hit') {
-      const hit = cacheGet(key);
-      if (hit) return hit;
-    }
-    const res = await fetch(path, {
-      headers: { 'Content-Type': 'application/json' },
-      ...opts
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      const msg = data?.error || data?.message || `HTTP ${res.status}`;
-      throw new Error(msg);
-    }
-    if ((opts.cache ?? 'hit') === 'hit') cacheSet(key, data);
+  const fetchJSON = window.fetchJSON || (async (path, opts={}) => {
+    const res = await fetch(path, { headers: { 'Content-Type': 'application/json' }, ...opts });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(data.error || data.message || `HTTP ${res.status}`);
     return data;
-  }
+  });
 
   // Garante Chart.js
   async function ensureChartJs() {

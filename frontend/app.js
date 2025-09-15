@@ -59,10 +59,9 @@ window.updateUserUI = updateUserUI;
 async function loadProjects(force = false) {
   try {
     if (force || !state.db.projects.length) {
-      const j = await fetchJSON('/api/metrics/top-projects?limit=999');
-      state.db.projects = j.items || [];
+      const j = await fetchJSON('/api/projects');
+      state.db.projects = j.data || j || [];
     }
-
     const tbody = document.getElementById('projects-tbody');
     const selCreate = document.getElementById('alloc-project');
     const selFilter = document.getElementById('filter-project');
@@ -70,20 +69,10 @@ async function loadProjects(force = false) {
     tbody.innerHTML = '';
     selCreate.innerHTML = '';
     if (selFilter) selFilter.innerHTML = '<option value="">Todos</option>';
-
     (state.db.projects || []).forEach(p => {
-      // tabela
       const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="py-2 pr-4">${p.name ?? '-'}</td>
-        <td class="py-2 pr-4">${p.id ?? '-'}</td>
-        <td class="py-2 pr-4">${p.status ?? '-'}</td>
-        <td class="py-2 pr-4">${p.owner_email ?? '-'}</td>
-        <td class="py-2">${(p.created_at || '').slice(0,10)}</td>
-      `;
+      tr.innerHTML = `<td class=\"py-2 pr-4\">${p.name ?? '-'} </td><td class=\"py-2 pr-4\">${p.id ?? '-'}</td><td class=\"py-2 pr-4\">${p.pipefy_status || p.status || '-'}</td><td class=\"py-2 pr-4\">${p.pipefy_owner_email || p.owner_email || '-'}</td><td class=\"py-2\">${(p.created_at || '').slice(0,10)}</td>`;
       tbody.appendChild(tr);
-
-      // selects
       const opt = document.createElement('option');
       opt.value = p.id;
       opt.textContent = p.name || p.id;
@@ -212,7 +201,6 @@ async function init() {
   const endpoints = [
     ['overview', '/api/metrics/overview'],
     ['timeseries', '/api/metrics/timeseries?days=30'],
-    ['projects', '/api/metrics/top-projects?limit=999'],
     ['professionals', '/api/professionals'],
     ['allocations', '/api/allocations']
   ];
@@ -222,8 +210,7 @@ async function init() {
     const key = endpoints[i][0];
     if (res.status === 'fulfilled') {
       const data = res.value;
-      if (key === 'projects') state.db.projects = data.items || [];
-      else state.db[key] = data;
+      state.db[key] = data;
     } else {
       showNotification(`Erro ao carregar ${key}`, 'error');
     }

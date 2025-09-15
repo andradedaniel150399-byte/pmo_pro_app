@@ -52,7 +52,8 @@
           <h2 id="page-title" class="text-xl font-semibold">Dashboard</h2>
           <p class="muted small" id="page-sub">Resumo do projeto</p>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
+          <button id="btn-sync" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-sm">Sincronizar Pipefy</button>
           <div class="muted small">Ambiente: <span id="env-label">PROD</span></div>
           <button class="ghost" id="btn-refresh">Atualizar</button>
         </div>
@@ -177,6 +178,30 @@
         container.innerHTML = '<div class="text-red-400 text-sm">Falha ao carregar projetos</div>'
       }
     }
+
+    async function syncPipefy(){
+      const btn = document.getElementById('btn-sync')
+      if(!btn) return
+      const original = btn.textContent
+      btn.disabled = true
+      btn.textContent = 'Sincronizando...'
+      try{
+        const r = await fetch('/api/sync/pipefy',{method:'POST'})
+        if(!r.ok) throw new Error('status '+r.status)
+        await loadData()
+        showMsg('Sincronização concluída','success')
+      }catch(e){
+        console.error('syncPipefy', e)
+        showMsg('Falha na sincronização','error')
+      }finally{
+        btn.disabled = false
+        btn.textContent = original
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+      document.getElementById('btn-sync')?.addEventListener('click', syncPipefy)
+    })
 
     function renderProjects(){
       const container = el('projects-table')

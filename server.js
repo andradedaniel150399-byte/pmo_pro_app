@@ -353,6 +353,37 @@ app.post('/api/allocations/cleanup', async (req, res) => {
   }
 });
 
+// Criar alocação
+app.post('/api/allocations', async (req, res) => {
+  try {
+    const { project_id, professional_id, hours, start, end } = req.body || {};
+    if (!project_id || !professional_id || !hours) {
+      return res.status(400).json({ error: 'project_id, professional_id e hours são obrigatórios' });
+    }
+    const numericHours = Number(hours);
+    if (Number.isNaN(numericHours) || numericHours <= 0) {
+      return res.status(400).json({ error: 'hours inválido' });
+    }
+    // Em MOCK_DEV retornamos objeto fake (não persiste)
+    if (MOCK_DEV) {
+      return res.json({ id: 'mock-' + Date.now(), project_id, professional_id, hours: numericHours, start: start || null, end: end || null });
+    }
+    const insertRow = { project_id, professional_id, hours: numericHours };
+    if (start) insertRow.start = start;
+    if (end) insertRow.end = end;
+    const { data, error } = await supabase
+      .from('allocations')
+      .insert([insertRow])
+      .select('*')
+      .single();
+    if (error) throw error;
+    res.json(data);
+  } catch (e) {
+    console.error('[allocations:create]', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ===== Helpers do Pipefy (sem createdAt/updatedAt do schema) =====
 async function fetchPipeProjects(pipeId) {
   const url = 'https://api.pipefy.com/graphql';

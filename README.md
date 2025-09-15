@@ -87,4 +87,31 @@ Passos rápidos:
 Depois de aplicar, rode `POST /api/sync/pipefy` para popular/atualizar os campos `pipefy_*`.
 
 
+### Runner local de migrations (opcional)
+
+Criei um pequeno utilitário Node para aplicar todas as migrations em `db/migrations` de forma automática: `tools/run_migrations.js`.
+
+Passos:
+
+1. Instale a dependência do cliente Postgres (apenas se ainda não estiver instalada):
+
+```bash
+npm install pg
+```
+
+2. Rode as migrations apontando `DATABASE_URL` ou passando `--url`:
+
+```bash
+# usando env
+DATABASE_URL="postgresql://user:pass@host:5432/dbname" npm run migrate
+
+# ou diretamente
+node tools/run_migrations.js --url "postgresql://user:pass@host:5432/dbname"
+```
+
+3. Confirme o prompt (ou passe `--yes` para confirmar automaticamente).
+
+Observação: o script aplica os arquivos em ordem alfabética; tenha cuidado em produção e faça backup antes.
+
+
 O `dashboard.js` agora centraliza os botões de sincronização e logout. A função `handleLogout` está disponível em `ui.js` para que qualquer página possa encerrar a sessão.

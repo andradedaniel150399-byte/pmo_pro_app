@@ -255,7 +255,7 @@ app.get('/api/projects', async (req, res) => {
       });
     }
 
-    const { status, owner_email, limit } = req.query || {};
+    const { status, owner_limit } = req.query || {};
     let q = supabase
       .from('projects')
       .select('id,external_id,name,pipefy_status,pipefy_owner_email,pipefy_priority,estimated_hours,started_at,status,owner_email,created_at,updated_at')
@@ -271,11 +271,19 @@ app.get('/api/projects', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+// Substituir bloco de /api/professionals (GET, POST, PUT, DELETE) pelo abaixo:
+
 app.get('/api/professionals', async (_req, res) => {
-  if (MOCK_DEV) return res.json([{ id: 'u1', name: 'Alice', email: 'alice@example.com', role: 'PM', hourly_rate: 120 }, { id: 'u2', name: 'Bruno', email: 'bruno@example.com', role: 'Dev', hourly_rate: 80 }]);
+  if (MOCK_DEV) {
+    return res.json([
+      { id: 1, name: 'Alice', role: 'PM', hourly_rate: 120, cost: 9000, utilization: 0.75, created_at: new Date().toISOString() },
+      { id: 2, name: 'Bruno', role: 'Dev', hourly_rate: 80, cost: 6000, utilization: 0.60, created_at: new Date().toISOString() }
+    ]);
+  }
   const { data, error } = await supabase
     .from('professionals')
-    .select('*')
+    .select('id,created_at,name,role,cost,utilization,hourly_rate,user_id')
     .order('created_at', { ascending: false })
     .limit(500);
   if (error) return res.status(500).json({ error: error.message });
@@ -283,16 +291,26 @@ app.get('/api/professionals', async (_req, res) => {
 });
 
 app.post('/api/professionals', async (req, res) => {
-  const { name, email, role, hourly_rate } = req.body || {};
+  const { name, role, cost, utilization, hourly_rate, user_id } = req.body || {};
   if (!name) return res.status(400).json({ error: 'name obrigatório' });
-  // If in MOCK_DEV, return a fake created object so UI can be tested without a real DB
   if (MOCK_DEV) {
-    const now = new Date().toISOString();
-    return res.json({ id: `mock-${Date.now()}`, name, email, role, hourly_rate: hourly_rate ?? null, created_at: now });
+    return res.json({
+      id: Date.now(),
+      name,
+      role: role || null,
+      cost: cost ?? null,
+      utilization: utilization ?? null,
+      hourly_rate: hourly_rate ?? null,
+      user_id: user_id || null,
+      created_at: new Date().toISOString()
+    });
   }
-
-  const insertRow = { name, email, role };
+  const insertRow = { name };
+  if (role !== undefined) insertRow.role = role;
+  if (cost !== undefined) insertRow.cost = cost;
+  if (utilization !== undefined) insertRow.utilization = utilization;
   if (hourly_rate !== undefined) insertRow.hourly_rate = hourly_rate;
+  if (user_id !== undefined) insertRow.user_id = user_id;
   const { data, error } = await supabase
     .from('professionals')
     .insert([insertRow])
@@ -302,54 +320,88 @@ app.post('/api/professionals', async (req, res) => {
   res.json(data);
 });
 
+app.put('/api/professionals/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, role, cost, utilization, hourly_rate, user_id } = req.body || {};
+  const update = {};
+  for (const [k,v] of Object.entries({ name, role, cost, utilization, hourly_rate, user_id })) {
+    if (v !== undefined) update[k] = v;
+  }
+  if (Object.keys(update).length === 0) return res.status(400).json({ error: 'Nada para atualizar' });
+  if (MOCK_DEV) return res.json({ id, ...update, updated_at: new Date().toISOString() });
+  const { data, error } = await supabase
+    .from('professionals')
+    .update(update)
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) return res.status(500).json({ error: error.message });
+  if (!data) return res.status(404).json({ error: 'Não encontrado' });
+  res.json(data);
+});
+
+app.delete('/api/professionals/:id', async (req, res) => {
+  const { id } = req.params;
+  if (MOCK_DEV) return res.json({ ok: true, deleted: 1 });
+  const { error } = await supabase.from('professionals').delete().eq('id', id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ ok: true });
+});
+
+// Ajustar GET /api/allocations (substituir o bloco atual):
 app.get('/api/allocations', async (req, res) => {
   try {
-    if (MOCK_DEV) return res.json([{ id: 'a1', project_id: 'p1', professional_id: 'u1', hours: 20, start: '2025-09-01', end: '2025-09-30' }, { id: 'a2', project_id: 'p2', professional_id: 'u2', hours: 20, start: '2025-09-01', end: '2025-09-30' }]);
-    let query = supabase
+    if (MOCK_DEV) {
+      return res.json([
+        { id: 'a1', project_id: 1, professional_id: 1, hours: 8, date: '2025-09-16', type: 'dev' },
+        { id: 'a2', project_id: 2, professional_id: 2, hours: 4, date: '2025-09-15', type: 'review' }
+      ]);
+    }
+
+    const { project_id, professional_id, start_date, end_date, limit } = req.query || {};
+    let q = supabase
       .from('allocations_view')
       .select('*')
-      .order('created_at', { ascending: false })
-      .limit(500);
+      .order('date', { ascending: false })
+      .limit(Math.max(1, Math.min(1000, Number(limit) || 500)));
 
-    const { project_id, professional_id, start_date, end_date } = req.query || {};
-    if (project_id) query = query.eq('project_id', project_id);
-    if (professional_id) query = query.eq('professional_id', professional_id);
-    if (start_date) query = query.gte('start_date', start_date);
-    if (end_date) query = query.lte('end_date', end_date);
+    if (project_id) q = q.eq('project_id', project_id);
+    if (professional_id) q = q.eq('professional_id', professional_id);
+    if (start_date) q = q.gte('date', start_date);
+    if (end_date) q = q.lte('date', end_date);
 
-    const { data, error } = await query;
+    const { data, error } = await q;
     if (error) throw error;
     res.json(data);
   } catch (e) {
+    console.error('[allocations:list]', e);
     res.status(500).json({ error: e.message });
   }
 });
 
+// Ajustar cleanup (caso view/base use date):
 app.post('/api/allocations/cleanup', async (req, res) => {
   try {
     const { month, professional_id, project_id } = req.body || {};
-    // Evita deleções amplas sem filtros (segurança)
     if (!month && !professional_id && !project_id) {
       return res.status(400).json({ error: 'Informe ao menos um filtro' });
     }
 
-    let query = supabase.from('allocations').delete();
+    let del = supabase.from('allocations').delete();
 
     if (month) {
-      // month esperado no formato YYYY-MM
       const start = `${month}-01`;
       const endDate = new Date(start);
       endDate.setMonth(endDate.getMonth() + 1);
-      const end = endDate.toISOString().slice(0, 10);
-      query = query.gte('start_date', start).lt('start_date', end);
+      const end = endDate.toISOString().slice(0,10);
+      // assumindo coluna date
+      del = del.gte('date', start).lt('date', end);
     }
+    if (professional_id) del = del.eq('professional_id', professional_id);
+    if (project_id) del = del.eq('project_id', project_id);
 
-    if (professional_id) query = query.eq('professional_id', professional_id);
-    if (project_id) query = query.eq('project_id', project_id);
-
-    const { data, error } = await query.select('id');
+    const { data, error } = await del.select('id');
     if (error) throw error;
-
     res.json({ ok: true, deleted: data.length });
   } catch (e) {
     console.error('[allocations/cleanup]', e);
@@ -357,24 +409,34 @@ app.post('/api/allocations/cleanup', async (req, res) => {
   }
 });
 
-// Criar alocação
+// Criar alocação (garantir uso de date):
+// Substituir o POST /api/allocations atual por este:
 app.post('/api/allocations', async (req, res) => {
   try {
-    const { project_id, professional_id, hours, start, end } = req.body || {};
-    if (!project_id || !professional_id || !hours) {
+    let { project_id, professional_id, hours, date, type } = req.body || {};
+    if (!project_id || !professional_id || hours === undefined) {
       return res.status(400).json({ error: 'project_id, professional_id e hours são obrigatórios' });
     }
     const numericHours = Number(hours);
     if (Number.isNaN(numericHours) || numericHours <= 0) {
       return res.status(400).json({ error: 'hours inválido' });
     }
-    // Em MOCK_DEV retornamos objeto fake (não persiste)
+    if (!date) date = new Date().toISOString().slice(0,10);
+
     if (MOCK_DEV) {
-      return res.json({ id: 'mock-' + Date.now(), project_id, professional_id, hours: numericHours, start: start || null, end: end || null });
+      return res.json({
+        id: 'mock-' + Date.now(),
+        project_id,
+        professional_id,
+        hours: numericHours,
+        date,
+        type: type || null
+      });
     }
-    const insertRow = { project_id, professional_id, hours: numericHours };
-    if (start) insertRow.start = start;
-    if (end) insertRow.end = end;
+
+    const insertRow = { project_id, professional_id, hours: numericHours, date };
+    if (type) insertRow.type = type;
+
     const { data, error } = await supabase
       .from('allocations')
       .insert([insertRow])
@@ -453,7 +515,7 @@ function mapCards(nodes) {
     const estimated_raw = look('estimated_hours') || look('estimated') || look('estimativa_horas') || null;
     const estimated_hours = estimated_raw == null ? null : Number(String(estimated_raw).replace(/[^0-9\.\-]/g, '')) || null;
     // started_at may be a date-like string in meta
-    const started_raw = look('started_at') || look('start_date') || look('data_inicio') || null;
+    const started_raw = look('started_at') || look('date') || look('data_inicio') || null;
     let started_at = null;
     if (started_raw) {
       const d = new Date(started_raw);

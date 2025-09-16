@@ -259,7 +259,7 @@ app.get('/api/projects', async (req, res) => {
     let q = supabase
       .from('projects')
       .select('id,external_id,name,pipefy_status,pipefy_owner_email,pipefy_priority,estimated_hours,started_at,status,owner_email,created_at,updated_at')
-      .order("date", { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(Math.max(1, Math.min(1000, Number(limit) || 500)));
     if (status) q = q.eq('pipefy_status', status);
     if (owner_email) q = q.eq('pipefy_owner_email', owner_email);
@@ -271,136 +271,15 @@ app.get('/api/projects', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
-
-
-app.post('/api/projects', async (req, res) => {
-  try {
-    const { 
-      name, client, status, fees, director, start, end, serviceType,
-      pipefyId, external_id, owner_email, pipefy_status, pipefy_owner_email,
-      pipefy_priority, estimated_hours, budget_discount = 0
-    } = req.body || {};
-
-    if (!name) {
-      return res.status(400).json({ error: 'Nome do projeto é obrigatório' });
-    }
-
-    if (MOCK_DEV) {
-      return res.json({
-        id: Date.now(),
-        name, client, status, fees, director, start, end, serviceType,
-        pipefyId, external_id, owner_email, pipefy_status, pipefy_owner_email,
-        pipefy_priority, estimated_hours, budget_discount,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
-    }
-
-    const insertRow = { 
-      name, client, status, fees, director, start, end, serviceType,
-      pipefyId, external_id, owner_email, pipefy_status, pipefy_owner_email,
-      pipefy_priority, estimated_hours, budget_discount
-    };
-
-    // Remove campos undefined/null/vazios
-    Object.keys(insertRow).forEach(key => {
-      if (insertRow[key] === undefined || insertRow[key] === null || insertRow[key] === '') {
-        delete insertRow[key];
-      }
-    });
-
-    const { data, error } = await supabase
-      .from('projects')
-      .insert([insertRow])
-      .select('*')
-      .single();
-
-    if (error) {
-      console.error('Erro ao criar projeto:', error);
-      return res.status(500).json({ error: error.message });
-    }
-
-    res.json(data);
-  } catch (e) {
-    console.error('Erro ao criar projeto:', e);
-    res.status(500).json({ error: e.message });
-  }
-});
-
-app.put('/api/projects/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updateData = { ...req.body, updated_at: new Date().toISOString() };
-    
-    // Remove campos que não devem ser atualizados
-    delete updateData.id;
-    delete updateData.created_at;
-
-    // Remove campos undefined/null/vazios
-    Object.keys(updateData).forEach(key => {
-      if (updateData[key] === undefined || updateData[key] === null || updateData[key] === '') {
-        delete updateData[key];
-      }
-    });
-
-    if (MOCK_DEV) {
-      return res.json({ id: parseInt(id), ...updateData });
-    }
-
-    const { data, error } = await supabase
-      .from('projects')
-      .update(updateData)
-      .eq('id', id)
-      .select('*')
-      .single();
-
-    if (error) {
-      console.error('Erro ao atualizar projeto:', error);
-      return res.status(500).json({ error: error.message });
-    }
-
-    if (!data) {
-      return res.status(404).json({ error: 'Projeto não encontrado' });
-    }
-
-    res.json(data);
-  } catch (e) {
-    console.error('Erro ao atualizar projeto:', e);
-    res.status(500).json({ error: e.message });
-  }
-});
-
-app.delete('/api/projects/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    if (MOCK_DEV) {
-      return res.json({ message: 'Projeto excluído com sucesso (modo dev)' });
-    }
-
-    const { error } = await supabase
-      .from('projects')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Erro ao excluir projeto:', error);
-      return res.status(500).json({ error: error.message });
-    }
-
-    res.json({ message: 'Projeto excluído com sucesso' });
-  } catch (e) {
-    console.error('Erro ao excluir projeto:', e);
-    res.status(500).json({ error: e.message });
-  }
-});
-
 app.get('/api/professionals', async (_req, res) => {
-  if (MOCK_DEV) return res.json([{ id: 'u1', name: 'Alice', email: 'alice@example.com', role: 'PM', hourly_rate: 120 }, { id: 'u2', name: 'Bruno', email: 'bruno@example.com', role: 'Dev', hourly_rate: 80 }]);
+  if (MOCK_DEV) return res.json([
+    { id: 'u1', name: 'Alice', email: 'alice@example.com', role: 'PM', hourly_rate: 120, cost: 9000, utilization: 0.75 },
+    { id: 'u2', name: 'Bruno', email: 'bruno@example.com', role: 'Dev', hourly_rate: 80, cost: 6000, utilization: 0.60 }
+  ]);
   const { data, error } = await supabase
     .from('professionals')
     .select('*')
-    .order("date", { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(500);
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
@@ -409,16 +288,26 @@ app.get('/api/professionals', async (_req, res) => {
 app.post('/api/professionals', async (req, res) => {
   const { name, email, role, hourly_rate, cost, utilization } = req.body || {};
   if (!name) return res.status(400).json({ error: 'name obrigatório' });
-  // If in MOCK_DEV, return a fake created object so UI can be tested without a real DB
+
   if (MOCK_DEV) {
     const now = new Date().toISOString();
-    return res.json({ id: `mock-${Date.now()}`, name, email, role, hourly_rate: hourly_rate ?? null, cost: cost ?? null, utilization: utilization ?? null, created_at: now });
+    return res.json({
+      id: `mock-${Date.now()}`,
+      name, email: email || null, role: role || null,
+      hourly_rate: hourly_rate ?? null,
+      cost: cost ?? null,
+      utilization: utilization ?? null,
+      created_at: now
+    });
   }
 
-  const insertRow = { name, email, role };
+  const insertRow = { name };
+  if (email !== undefined) insertRow.email = email;
+  if (role !== undefined) insertRow.role = role;
   if (hourly_rate !== undefined) insertRow.hourly_rate = hourly_rate;
   if (cost !== undefined) insertRow.cost = cost;
   if (utilization !== undefined) insertRow.utilization = utilization;
+
   const { data, error } = await supabase
     .from('professionals')
     .insert([insertRow])
@@ -428,24 +317,52 @@ app.post('/api/professionals', async (req, res) => {
   res.json(data);
 });
 
+app.put('/api/professionals/:id', async (req, res) => {
+  const { id } = req.params;
+  const update = { ...req.body };
+  delete update.id;
+  if (Object.keys(update).length === 0) {
+    return res.status(400).json({ error: 'Nada para atualizar' });
+  }
+  if (MOCK_DEV) {
+    return res.json({ id, ...update, updated_at: new Date().toISOString() });
+  }
+  const { data, error } = await supabase
+    .from('professionals')
+    .update(update)
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) return res.status(500).json({ error: error.message });
+  if (!data) return res.status(404).json({ error: 'Não encontrado' });
+  res.json(data);
+});
+
+app.delete('/api/professionals/:id', async (req, res) => {
+  const { id } = req.params;
+  if (MOCK_DEV) return res.json({ ok: true, deleted: 1 });
+  const { error } = await supabase
+    .from('professionals')
+    .delete()
+    .eq('id', id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ ok: true });
+});
+
 app.get('/api/allocations', async (req, res) => {
   try {
-    if (MOCK_DEV) return res.json([
-      { id: "a1", project_id: "p1", professional_id: "u1", hours: 20, date: "2025-09-15", type: "development" }, 
-      { id: "a2", project_id: "p2", professional_id: "u2", hours: 20, date: "2025-09-16", type: "consulting" }
-    ]);
-    
+    if (MOCK_DEV) return res.json([{ id: 'a1', project_id: 'p1', professional_id: 'u1', hours: 20, start: '2025-09-01', end: '2025-09-30' }, { id: 'a2', project_id: 'p2', professional_id: 'u2', hours: 20, start: '2025-09-01', end: '2025-09-30' }]);
     let query = supabase
       .from('allocations_view')
       .select('*')
-      .order("date", { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(500);
 
     const { project_id, professional_id, start_date, end_date } = req.query || {};
     if (project_id) query = query.eq('project_id', project_id);
     if (professional_id) query = query.eq('professional_id', professional_id);
-    if (start_date) query = query.gte("date", start_date);
-    if (end_date) query = query.lte("date", end_date);
+    if (start_date) query = query.gte('start_date', start_date);
+    if (end_date) query = query.lte('end_date', end_date);
 
     const { data, error } = await query;
     if (error) throw error;
@@ -490,21 +407,44 @@ app.post('/api/allocations/cleanup', async (req, res) => {
 // Criar alocação
 app.post('/api/allocations', async (req, res) => {
   try {
-    const { project_id, professional_id, hours, date, type } = req.body || {};
-    if (!project_id || !professional_id || !hours) {
+    let { project_id, professional_id, hours, date, start, end, type } = req.body || {};
+    if (!project_id || !professional_id || hours === undefined) {
       return res.status(400).json({ error: 'project_id, professional_id e hours são obrigatórios' });
     }
     const numericHours = Number(hours);
     if (Number.isNaN(numericHours) || numericHours <= 0) {
       return res.status(400).json({ error: 'hours inválido' });
     }
-    // Em MOCK_DEV retornamos objeto fake (não persiste)
+
+    // Normalização: se não veio date mas veio start => usar start como date
+    if (!date && start) date = start;
+    // Fallback: se ainda não tem date, usar hoje (YYYY-MM-DD)
+    if (!date) date = new Date().toISOString().slice(0,10);
+
     if (MOCK_DEV) {
-      return res.json({ id: 'mock-' + Date.now(), project_id, professional_id, hours: numericHours, date: date || new Date().toISOString().slice(0, 10), type: type || null });
+      return res.json({
+        id: 'mock-' + Date.now(),
+        project_id,
+        professional_id,
+        hours: numericHours,
+        date,
+        type: type || null,
+        start: start || null,
+        end: end || null
+      });
     }
-    const insertRow = { project_id, professional_id, hours: numericHours, date: date || new Date().toISOString().slice(0, 10) };
+
+    const insertRow = {
+      project_id,
+      professional_id,
+      hours: numericHours,
+      date
+    };
     if (type) insertRow.type = type;
-    
+    // Se o schema real ainda usa start/end, manter compatibilidade:
+    if (start) insertRow.start = start;
+    if (end) insertRow.end = end;
+
     const { data, error } = await supabase
       .from('allocations')
       .insert([insertRow])

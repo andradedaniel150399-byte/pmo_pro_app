@@ -399,4 +399,466 @@
     loadTopProjects,
     syncPipefy
   };
+
+  // Dashboard com métricas melhoradas
+
+  class Dashboard {
+    constructor() {
+      this.data = {
+        projects: [],
+        professionals: [],
+        allocations: []
+      };
+    }
+
+    async init() {
+      await this.loadData();
+      this.render();
+      this.setupFilters();
+    }
+
+    async loadData() {
+      try {
+        const [projectsRes, professionalsRes, allocationsRes] = await Promise.all([
+          fetch('/api/projects'),
+          fetch('/api/professionals'),
+          fetch('/api/allocations')
+        ]);
+
+        const projectsData = await projectsRes.json();
+        this.data.projects = projectsData.data || projectsData;
+        this.data.professionals = await professionalsRes.json();
+        this.data.allocations = await allocationsRes.json();
+      } catch (error) {
+        console.error('Erro ao carregar dados do dashboard:', error);
+        showNotification('Erro ao carregar dados do dashboard', 'error');
+      }
+    }
+
+    render() {
+      const dashboardContainer = document.getElementById('dashboard');
+      if (!dashboardContainer) return;
+
+      dashboardContainer.innerHTML = `
+        <div class="dashboard-header">
+          <h2>📊 Dashboard PMO</h2>
+          <div class="dashboard-filters">
+            <select id="periodFilter">
+              <option value="7">Últimos 7 dias</option>
+              <option value="30" selected>Últimos 30 dias</option>
+              <option value="90">Últimos 90 dias</option>
+            </select>
+            <button onclick="dashboard.refresh()" class="btn-refresh">🔄 Atualizar</button>
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          ${this.renderMetricsCards()}
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-container">
+            <h3>📈 Horas por Profissional</h3>
+            <div id="professionalsChart"></div>
+          </div>
+          
+          <div class="chart-container">
+            <h3>💰 Receita por Projeto</h3>
+            <div id="revenueChart"></div>
+          </div>
+          
+          <div class="chart-container">
+            <h3>⏱️ Utilização dos Profissionais</h3>
+            <div id="utilizationChart"></div>
+          </div>
+          
+          <div class="chart-container">
+            <h3>📅 Horas por Dia</h3>
+            <div id="timelineChart"></div>
+          </div>
+        </div>
+
+        <div class="tables-grid">
+          <div class="table-container">
+            <h3>🏆 Top Projetos por Receita</h3>
+            <div id="topProjectsTable"></div>
+          </div>
+          
+          <div class="table-container">
+            <h3>👥 Performance dos Profissionais</h3>
+            <div id="professionalsPerformanceTable"></div>
+          </div>
+        </div>
+      `;
+
+      this.renderCharts();
+      this.renderTables();
+    }
+
+    renderMetricsCards() {
+      const metrics = this.calculateMetrics();
+      
+      return `
+        <div class="metric-card">
+          <div class="metric-icon">💼</div>
+          <div class="metric-content">
+            <div class="metric-value">${metrics.totalProjects}</div>
+            <div class="metric-label">Projetos Ativos</div>
+            <div class="metric-change ${metrics.projectsChange >= 0 ? 'positive' : 'negative'}">
+              ${metrics.projectsChange >= 0 ? '+' : ''}${metrics.projectsChange}% vs mês anterior
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon">👥</div>
+          <div class="metric-content">
+            <div class="metric-value">${metrics.totalProfessionals}</div>
+            <div class="metric-label">Profissionais</div>
+            <div class="metric-change positive">
+              ${metrics.avgUtilization}% utilização média
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon">⏰</div>
+          <div class="metric-content">
+            <div class="metric-value">${metrics.totalHours}h</div>
+            <div class="metric-label">Horas Alocadas</div>
+            <div class="metric-change ${metrics.hoursChange >= 0 ? 'positive' : 'negative'}">
+              ${metrics.hoursChange >= 0 ? '+' : ''}${metrics.hoursChange}% vs semana anterior
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon">💰</div>
+          <div class="metric-content">
+            <div class="metric-value">R$ ${metrics.totalRevenue}</div>
+            <div class="metric-label">Receita Estimada</div>
+            <div class="metric-change positive">
+              Média R$ ${metrics.avgHourlyRate}/h
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    calculateMetrics() {
+      const currentDate = new Date();
+      const lastMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+      const lastWeek = new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      // Filtrar alocações recentes
+      const recentAllocations = this.data.allocations.filter(a => {
+        const allocDate = new Date(a.date);
+        return allocDate >= lastMonth;
+      });
+
+      const totalHours = recentAllocations.reduce((sum, a) => sum + Number(a.hours), 0);
+      const totalRevenue = recentAllocations.reduce((sum, a) => {
+        const hours = Number(a.hours) || 0;
+        const rate = Number(a.hourly_rate) || 0;
+        return sum + (hours * rate);
+      }, 0);
+
+      // Calcular utilização média
+      const professionalsWithUtilization = this.data.professionals.filter(p => p.utilization);
+      const avgUtilization = professionalsWithUtilization.length > 0 
+        ? (professionalsWithUtilization.reduce((sum, p) => sum + Number(p.utilization), 0) / professionalsWithUtilization.length * 100).toFixed(1)
+        : 0;
+
+      // Calcular taxa média
+      const avgHourlyRate = this.data.professionals.filter(p => p.hourly_rate).length > 0
+        ? (this.data.professionals.reduce((sum, p) => sum + (Number(p.hourly_rate) || 0), 0) / this.data.professionals.filter(p => p.hourly_rate).length).toFixed(0)
+        : 0;
+
+      return {
+        totalProjects: this.data.projects.length,
+        totalProfessionals: this.data.professionals.length,
+        totalHours: totalHours.toFixed(1),
+        totalRevenue: totalRevenue.toLocaleString('pt-BR'),
+        avgUtilization,
+        avgHourlyRate,
+        projectsChange: Math.floor(Math.random() * 20) - 10, // Mock
+        hoursChange: Math.floor(Math.random() * 30) - 15     // Mock
+      };
+    }
+
+    renderCharts() {
+      this.renderProfessionalsChart();
+      this.renderRevenueChart();
+      this.renderUtilizationChart();
+      this.renderTimelineChart();
+    }
+
+    renderProfessionalsChart() {
+      const profHours = {};
+      
+      this.data.allocations.forEach(alloc => {
+        const profName = alloc.professional_name || `Prof ${alloc.professional_id}`;
+        profHours[profName] = (profHours[profName] || 0) + Number(alloc.hours);
+      });
+
+      const chartData = Object.entries(profHours)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 10);
+
+      const container = document.getElementById('professionalsChart');
+      container.innerHTML = `
+        <div class="simple-chart">
+          ${chartData.map(([name, hours]) => `
+            <div class="chart-bar">
+              <div class="bar-label">${name}</div>
+              <div class="bar-container">
+                <div class="bar-fill" style="width: ${(hours / Math.max(...chartData.map(([,h]) => h))) * 100}%"></div>
+                <div class="bar-value">${hours.toFixed(1)}h</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    renderRevenueChart() {
+      const projectRevenue = {};
+      
+      this.data.allocations.forEach(alloc => {
+        const projName = alloc.project_name || `Projeto ${alloc.project_id}`;
+        const revenue = Number(alloc.hours) * Number(alloc.hourly_rate || 0);
+        projectRevenue[projName] = (projectRevenue[projName] || 0) + revenue;
+      });
+
+      const chartData = Object.entries(projectRevenue)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 8);
+
+      const container = document.getElementById('revenueChart');
+      container.innerHTML = `
+        <div class="simple-chart">
+          ${chartData.map(([name, revenue]) => `
+            <div class="chart-bar">
+              <div class="bar-label">${name}</div>
+              <div class="bar-container">
+                <div class="bar-fill revenue" style="width: ${(revenue / Math.max(...chartData.map(([,r]) => r))) * 100}%"></div>
+                <div class="bar-value">R$ ${revenue.toLocaleString('pt-BR')}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    renderUtilizationChart() {
+      const professionalsWithUtilization = this.data.professionals
+        .filter(p => p.utilization)
+        .sort((a, b) => Number(b.utilization) - Number(a.utilization));
+
+      const container = document.getElementById('utilizationChart');
+      container.innerHTML = `
+        <div class="simple-chart">
+          ${professionalsWithUtilization.map(prof => {
+            const utilization = Number(prof.utilization) * 100;
+            const utilizationClass = utilization >= 80 ? 'high' : utilization >= 60 ? 'medium' : 'low';
+            
+            return `
+              <div class="chart-bar">
+                <div class="bar-label">${prof.name} (${prof.role || 'N/A'})</div>
+                <div class="bar-container">
+                  <div class="bar-fill utilization ${utilizationClass}" style="width: ${utilization}%"></div>
+                  <div class="bar-value">${utilization.toFixed(1)}%</div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    renderTimelineChart() {
+      // Agrupar horas por data
+      const dailyHours = {};
+      
+      this.data.allocations.forEach(alloc => {
+        const date = alloc.date;
+        dailyHours[date] = (dailyHours[date] || 0) + Number(alloc.hours);
+      });
+
+      // Últimos 14 dias
+      const dates = Object.keys(dailyHours)
+        .sort()
+        .slice(-14);
+
+      const container = document.getElementById('timelineChart');
+      container.innerHTML = `
+        <div class="timeline-chart">
+          ${dates.map(date => {
+            const hours = dailyHours[date];
+            const maxHours = Math.max(...Object.values(dailyHours));
+            
+            return `
+              <div class="timeline-bar">
+                <div class="timeline-fill" style="height: ${(hours / maxHours) * 100}%"></div>
+                <div class="timeline-label">${new Date(date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</div>
+                <div class="timeline-value">${hours.toFixed(1)}h</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    renderTables() {
+      this.renderTopProjectsTable();
+      this.renderProfessionalsPerformanceTable();
+    }
+
+    renderTopProjectsTable() {
+      const projectStats = {};
+      
+      this.data.allocations.forEach(alloc => {
+        const projId = alloc.project_id;
+        const projName = alloc.project_name || `Projeto ${projId}`;
+        
+        if (!projectStats[projId]) {
+          projectStats[projId] = {
+            name: projName,
+            hours: 0,
+            revenue: 0,
+            professionals: new Set()
+          };
+        }
+        
+        projectStats[projId].hours += Number(alloc.hours);
+        projectStats[projId].revenue += Number(alloc.hours) * Number(alloc.hourly_rate || 0);
+        projectStats[projId].professionals.add(alloc.professional_id);
+      });
+
+      const topProjects = Object.values(projectStats)
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 10);
+
+      const container = document.getElementById('topProjectsTable');
+      container.innerHTML = `
+        <table class="performance-table">
+          <thead>
+            <tr>
+              <th>Projeto</th>
+              <th>Horas</th>
+              <th>Receita</th>
+              <th>Profissionais</th>
+              <th>R$/Hora</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${topProjects.map(proj => `
+              <tr>
+                <td>${proj.name}</td>
+                <td>${proj.hours.toFixed(1)}h</td>
+                <td>R$ ${proj.revenue.toLocaleString('pt-BR')}</td>
+                <td>${proj.professionals.size}</td>
+                <td>R$ ${proj.hours > 0 ? (proj.revenue / proj.hours).toFixed(0) : '0'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    renderProfessionalsPerformanceTable() {
+      const profStats = {};
+      
+      this.data.allocations.forEach(alloc => {
+        const profId = alloc.professional_id;
+        const profName = alloc.professional_name || `Prof ${profId}`;
+        
+        if (!profStats[profId]) {
+          profStats[profId] = {
+            name: profName,
+            role: alloc.professional_role || 'N/A',
+            hours: 0,
+            revenue: 0,
+            projects: new Set(),
+            hourly_rate: Number(alloc.hourly_rate || 0)
+          };
+        }
+        
+        profStats[profId].hours += Number(alloc.hours);
+        profStats[profId].revenue += Number(alloc.hours) * Number(alloc.hourly_rate || 0);
+        profStats[profId].projects.add(alloc.project_id);
+      });
+
+      const profPerformance = Object.values(profStats)
+        .sort((a, b) => b.revenue - a.revenue);
+
+      const container = document.getElementById('professionalsPerformanceTable');
+      container.innerHTML = `
+        <table class="performance-table">
+          <thead>
+            <tr>
+              <th>Profissional</th>
+              <th>Função</th>
+              <th>Horas</th>
+              <th>Receita</th>
+              <th>Projetos</th>
+              <th>Taxa/Hora</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${profPerformance.map(prof => `
+              <tr>
+                <td>${prof.name}</td>
+                <td>${prof.role}</td>
+                <td>${prof.hours.toFixed(1)}h</td>
+                <td>R$ ${prof.revenue.toLocaleString('pt-BR')}</td>
+                <td>${prof.projects.size}</td>
+                <td>R$ ${prof.hourly_rate.toFixed(0)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    setupFilters() {
+      const periodFilter = document.getElementById('periodFilter');
+      if (periodFilter) {
+        periodFilter.addEventListener('change', () => {
+          this.filterByPeriod(periodFilter.value);
+        });
+      }
+    }
+
+    filterByPeriod(days) {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - parseInt(days));
+      
+      // Filtrar alocações
+      this.data.allocations = this.data.allocations.filter(alloc => {
+        const allocDate = new Date(alloc.date);
+        return allocDate >= cutoffDate;
+      });
+      
+      // Re-renderizar
+      this.renderCharts();
+      this.renderTables();
+    }
+
+    async refresh() {
+      showNotification('Atualizando dashboard...');
+      await this.loadData();
+      this.render();
+      showNotification('Dashboard atualizado!');
+    }
+  }
+
+  // Instância global do dashboard
+  let dashboard;
+
+  // Inicializar quando a página carregar
+  document.addEventListener('DOMContentLoaded', () => {
+    dashboard = new Dashboard();
+    dashboard.init();
+  });
 })();

@@ -106,6 +106,192 @@
     }
   }
 
+  // Atualizar renderização das alocações
+
+  function renderAllocations(allocations) {
+    const tbody = document.querySelector('#allocationsTable tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = allocations.map(alloc => `
+      <tr data-id="${alloc.id}">
+        <td>${formatDate(alloc.date)}</td>
+        <td>${alloc.project_name || `Projeto ${alloc.project_id}`}</td>
+        <td>${alloc.professional_name || `Prof ${alloc.professional_id}`}</td>
+        <td>${alloc.professional_role || 'N/A'}</td>
+        <td>${Number(alloc.hours).toFixed(1)}h</td>
+        <td>${alloc.type || 'N/A'}</td>
+        <td>R$ ${calculateAllocationValue(alloc)}</td>
+        <td>
+          <button onclick="editAllocation(${alloc.id})" class="btn-edit">✏️</button>
+          <button onclick="deleteAllocation(${alloc.id})" class="btn-delete">🗑️</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Calcular valor da alocação
+  function calculateAllocationValue(allocation) {
+    const hours = Number(allocation.hours) || 0;
+    const hourlyRate = Number(allocation.hourly_rate) || 0;
+    return (hours * hourlyRate).toFixed(2);
+  }
+
+  // Atualizar formulário de alocação
+  function showAllocationForm(allocation = null) {
+    const isEdit = !!allocation;
+    const formHtml = `
+      <div class="modal-overlay" onclick="closeAllocationForm()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+          <h3>${isEdit ? 'Editar' : 'Nova'} Alocação</h3>
+          <form id="allocationForm" onsubmit="saveAllocation(event)">
+            <input type="hidden" id="allocId" value="${allocation?.id || ''}">
+            
+            <div class="form-group">
+              <label for="allocProject">Projeto *</label>
+              <select id="allocProject" required>
+                <option value="">Selecione um projeto...</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="allocProfessional">Profissional *</label>
+              <select id="allocProfessional" required>
+                <option value="">Selecione um profissional...</option>
+              </select>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="allocDate">Data *</label>
+                <input type="date" id="allocDate" required 
+                       value="${allocation?.date || new Date().toISOString().slice(0,10)}">
+              </div>
+              
+              <div class="form-group">
+                <label for="allocHours">Horas *</label>
+                <input type="number" id="allocHours" step="0.5" min="0.5" max="24" required
+                       value="${allocation?.hours || ''}">
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="allocType">Tipo de Trabalho</label>
+              <select id="allocType">
+                <option value="">Selecione...</option>
+                <option value="development" ${allocation?.type === 'development' ? 'selected' : ''}>Desenvolvimento</option>
+                <option value="planning" ${allocation?.type === 'planning' ? 'selected' : ''}>Planejamento</option>
+                <option value="meeting" ${allocation?.type === 'meeting' ? 'selected' : ''}>Reunião</option>
+                <option value="review" ${allocation?.type === 'review' ? 'selected' : ''}>Revisão</option>
+                <option value="testing" ${allocation?.type === 'testing' ? 'selected' : ''}>Testes</option>
+                <option value="documentation" ${allocation?.type === 'documentation' ? 'selected' : ''}>Documentação</option>
+                <option value="consulting" ${allocation?.type === 'consulting' ? 'selected' : ''}>Consultoria</option>
+              </select>
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" onclick="closeAllocationForm()">Cancelar</button>
+              <button type="submit">${isEdit ? 'Atualizar' : 'Criar'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', formHtml);
+    
+    // Carregar projetos e profissionais para os selects
+    loadProjectsForSelect();
+    loadProfessionalsForSelect();
+    
+    // Se é edição, selecionar valores
+    if (isEdit) {
+      setTimeout(() => {
+        document.getElementById('allocProject').value = allocation.project_id;
+        document.getElementById('allocProfessional').value = allocation.professional_id;
+      }, 100);
+    }
+  }
+
+  // Carregar projetos para select
+  async function loadProjectsForSelect() {
+    try {
+      const response = await fetch('/api/projects');
+      const result = await response.json();
+      const projects = result.data || result;
+      
+      const select = document.getElementById('allocProject');
+      select.innerHTML = '<option value="">Selecione um projeto...</option>' +
+        projects.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    } catch (error) {
+      console.error('Erro ao carregar projetos:', error);
+    }
+  }
+
+  // Carregar profissionais para select  
+  async function loadProfessionalsForSelect() {
+    try {
+      const response = await fetch('/api/professionals');
+      const professionals = await response.json();
+      
+      const select = document.getElementById('allocProfessional');
+      select.innerHTML = '<option value="">Selecione um profissional...</option>' +
+        professionals.map(p => `<option value="${p.id}">${p.name} (${p.role || 'N/A'})</option>`).join('');
+    } catch (error) {
+      console.error('Erro ao carregar profissionais:', error);
+    }
+  }
+
+  // Salvar alocação
+  async function saveAllocation(event) {
+    event.preventDefault();
+    
+    const id = document.getElementById('allocId').value;
+    const project_id = document.getElementById('allocProject').value;
+    const professional_id = document.getElementById('allocProfessional').value;
+    const date = document.getElementById('allocDate').value;
+    const hours = document.getElementById('allocHours').value;
+    const type = document.getElementById('allocType').value;
+    
+    const data = {
+      project_id: Number(project_id),
+      professional_id: Number(professional_id),
+      date,
+      hours: Number(hours)
+    };
+    
+    if (type) data.type = type;
+    
+    try {
+      const url = id ? `/api/allocations/${id}` : '/api/allocations';
+      const method = id ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      if (!response.ok) throw new Error('Erro ao salvar');
+      
+      closeAllocationForm();
+      loadAllocations(); // Recarregar lista
+      showNotification(`Alocação ${id ? 'atualizada' : 'criada'} com sucesso!`);
+    } catch (error) {
+      console.error('Erro:', error);
+      showNotification('Erro ao salvar alocação', 'error');
+    }
+  }
+
+  function closeAllocationForm() {
+    const modal = document.querySelector('.modal-overlay');
+    if (modal) modal.remove();
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return 'N/A';
+    return new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR');
+  }
+
   // Expor
   window.loadAllocations = loadAllocations;
   window.populateAllocationSelects = populateAllocationSelects;

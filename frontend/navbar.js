@@ -12,12 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
         <a href="/#tab-dashboard" class="nav-link hover:underline">Dashboard</a>
         <a href="/#tab-projects" class="nav-link hover:underline">Projetos</a>
         <a href="/#tab-kanban" class="nav-link hover:underline">Kanban</a>
+        <a href="/simulador.html" class="nav-link hover:underline">Simulador</a>
       </div>
     </div>
     <div id="nav-mobile" class="md:hidden hidden px-4 pb-4 flex flex-col gap-2 bg-indigo-600">
       <a href="/#tab-dashboard" class="nav-link">Dashboard</a>
       <a href="/#tab-projects" class="nav-link">Projetos</a>
       <a href="/#tab-kanban" class="nav-link">Kanban</a>
+      <a href="/simulador.html" class="nav-link">Simulador</a>
     </div>
   `;
   document.body.prepend(nav);

@@ -166,3 +166,12 @@ Cobertura atual:
 - `/api/sync/pipefy` retorno 400 sem PIPEFY_TOKEN
 
 Adicione novos testes criando arquivos `*.test.js` (Node 18+ suporta `node --test`).
+
+## 🎮 Simulador (PMO Quest)
+
+Acesse `/simulador.html` (ou **🎮 Simulador** no menu lateral) para testar modificações no portfólio sem alterar o banco: tudo roda numa cópia em memória.
+
+- **Modos:** Laboratório livre (sem limites nem eventos), Apagar incêndio, Margem de ouro e Crescer sem quebrar.
+- **Modificações:** transferir horas, ajustar alocação, hora extra, reajustar taxa, contratar, desligar e renegociar projeto (aditivo, corte de escopo, reajuste de preço, pausar).
+- **Indicadores:** receita, custo, lucro, margem, entrega, moral, sobrecarga e ociosidade, sempre comparados com o cenário inicial, mais um score de 0 a 100.
+- **Dados:** cenário demo ou os seus dados (`/api/professionals`, `/api/projects`, `/api/allocations`). Sem dados suficientes, o jogo cai no cenário demo.

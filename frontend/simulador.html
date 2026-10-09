@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PMO Quest — Simulador de Cenários</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .hidden { display: none; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1rem; }
+    .card-title { font-weight: 600; margin-bottom: .75rem; }
+    .field { width: 100%; border: 1px solid #cbd5e1; border-radius: .5rem; padding: .4rem .6rem; font-size: .875rem; background: #fff; }
+    .lbl { display: block; font-size: .75rem; color: #475569; margin-bottom: .2rem; }
+    .action-btn.active { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+    .bar { height: .5rem; border-radius: 9999px; background: #e2e8f0; overflow: hidden; }
+    .bar > div { height: 100%; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <header class="bg-indigo-600 text-white">
+    <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+      <div class="font-semibold text-lg">🎮 PMO Quest <span class="font-normal text-indigo-200 text-sm hidden sm:inline">— simulador de cenários</span></div>
+      <a href="/app.html" class="text-sm hover:underline">← Voltar ao PMO Pro</a>
+    </div>
+  </header>
+
+  <!-- TELA INICIAL -->
+  <main id="screen-start" class="max-w-5xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-1">Teste modificações no portfólio sem medo</h1>
+    <p class="text-slate-600 mb-6">Tudo aqui acontece numa cópia em memória: nada é gravado no banco. Escolha um modo e jogue mês a mês.</p>
+
+    <div class="card mb-6">
+      <div class="card-title">1. Fonte dos dados</div>
+      <div class="flex flex-wrap gap-4 text-sm">
+        <label class="flex items-center gap-2"><input type="radio" name="source" value="demo" checked /> Cenário demo (equipe fictícia de 6 pessoas)</label>
+        <label class="flex items-center gap-2"><input type="radio" name="source" value="real" /> Meus dados (projetos, profissionais e alocações da API)</label>
+      </div>
+      <p id="source-msg" class="text-xs text-slate-500 mt-2"></p>
+    </div>
+
+    <div class="card-title">2. Escolha o modo</div>
+    <div id="mission-list" class="grid sm:grid-cols-2 gap-4"></div>
+  </main>
+
+  <!-- TELA DO JOGO -->
+  <main id="screen-game" class="hidden max-w-7xl mx-auto px-4 py-6">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div>
+        <div id="g-mission" class="text-xl font-bold"></div>
+        <div id="g-turn" class="text-sm text-slate-600"></div>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="text-right mr-2">
+          <div class="text-xs text-slate-500">Score do mês</div>
+          <div id="g-score" class="text-3xl font-bold text-indigo-600 leading-none"></div>
+        </div>
+        <button id="btn-undo" class="px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-sm">↩ Desfazer</button>
+        <button id="btn-end-turn" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm">Encerrar mês ▶</button>
+        <button id="btn-restart" class="px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-sm">Sair</button>
+      </div>
+    </div>
+
+    <div id="g-kpis" class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3 mb-4"></div>
+
+    <div class="grid lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 flex flex-col gap-4">
+        <div class="card">
+          <div class="card-title">🎯 Objetivo</div>
+          <div id="g-goal" class="text-sm"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">👥 Equipe</div>
+          <div class="overflow-x-auto"><table class="w-full text-sm">
+            <thead><tr class="text-left text-slate-500">
+              <th class="py-1 pr-3">Profissional</th><th class="py-1 pr-3">R$/h</th><th class="py-1 pr-3 w-40">Carga</th><th class="py-1 pr-3">Moral</th><th class="py-1">Situação</th>
+            </tr></thead>
+            <tbody id="g-team"></tbody>
+          </table></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📁 Projetos <span class="text-xs font-normal text-slate-500">(demanda e receita por mês)</span></div>
+          <div class="overflow-x-auto"><table class="w-full text-sm">
+            <thead><tr class="text-left text-slate-500">
+              <th class="py-1 pr-3">Projeto</th><th class="py-1 pr-3">Demanda</th><th class="py-1 pr-3 w-36">Entrega</th><th class="py-1 pr-3 text-right">Receita</th><th class="py-1 pr-3 text-right">Margem</th><th class="py-1">Equipe</th>
+            </tr></thead>
+            <tbody id="g-projects"></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-4">
+        <div class="card">
+          <div class="card-title">🛠️ Modificações <span id="g-actions" class="text-xs font-normal text-slate-500"></span></div>
+          <div id="action-types" class="grid grid-cols-2 gap-2 mb-3"></div>
+          <form id="action-form" class="flex flex-col gap-2"></form>
+        </div>
+        <div class="card">
+          <div class="card-title">💡 Dicas do coach</div>
+          <ul id="g-hints" class="text-sm list-disc pl-5 space-y-1"></ul>
+        </div>
+        <div class="card">
+          <div class="card-title">📈 Evolução do score</div>
+          <div id="g-chart"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📜 Histórico de modificações</div>
+          <ol id="g-log" class="text-xs space-y-1 max-h-64 overflow-y-auto"></ol>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL -->
+  <div id="modal" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl">
+      <div id="modal-body"></div>
+      <div class="flex justify-end gap-2 mt-4" id="modal-actions"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl text-white text-sm shadow-lg z-50"></div>
+
+  <script src="/simulador.js" defer></script>
+</body>
+</html>
